@@ -1,0 +1,20 @@
+= Sysinfo LKM
+
+This LKM gets system information from kernel space.
+
+== How to use
+
+=== read()
+
+Read the current value of the <<current-info-type, current_info_type>> from the module.
+
+=== ioctl()
+
+Change the information returned from the module.
+
+[[currnt-info-type]]
+== current_info_type
+
+This is the single sysinfo value that is returned from the module. The available sysinfo types are:
+
+1. cpu_speed_hz
