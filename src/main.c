@@ -40,7 +40,7 @@ static int __init sysinfo_cdev_init(void)
 
     if (cdev_add(&sysinfo_cdev, dev, 1) < 0)
     {
-        printk("Failed to add os--char-dev--k1\n");
+        printk("Failed to add %s\n", DEVICE_NAME);
         unregister_chrdev_region(dev, 1);
         return -1;
     }
