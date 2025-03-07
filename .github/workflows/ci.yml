@@ -25,5 +25,7 @@ jobs:
           sudo apt-get install linux-headers-$(uname -r)
 
       - name: Build kernel object
-        run: make
+        run: |
+          cd ./src
+          make
         continue-on-error: false # fail workflow if unsuccessful build
