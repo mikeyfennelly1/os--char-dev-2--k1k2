@@ -77,16 +77,9 @@ static void __exit sysinfo_cdev_exit(void)
     printk(KERN_INFO "Module unloaded\n");
 };
 
-long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-{
-    printk(KERN_INFO "IOCTL command received\n");
-    return 0;  // Return success
-}
-
 static struct file_operations fops = {
     .owner = THIS_MODULE,
-    .open = sysinfo_open,
-    .unlocked_ioctl = sysinfo_ioctl
+    .open = sysinfo_open
 };
 
 module_init(sysinfo_cdev_init);
