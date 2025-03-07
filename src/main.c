@@ -67,7 +67,21 @@ static int __init sysinfo_cdev_init(void)
     return 0;
 };
 
+static int sysinfo_open(struct inode *inode, struct file *fp)
+{
+    printk(KERN_INFO "sysinfo device opened\n");
 
+    if (atomic_read(&sysinfo_cdev))
+    {
+        return -EBUSY;
+    }
+
+    atomic_inc(&sysinfo_cdev);
+
+    fp->private_data = inode->i_private;
+
+    return 0;
+}
 
 static void __exit sysinfo_cdev_exit(void)
 {
