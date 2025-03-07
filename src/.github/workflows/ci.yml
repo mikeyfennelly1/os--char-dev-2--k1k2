@@ -1,0 +1,31 @@
+name: C Make Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+      
+      - name: Install Build Essentials
+        run: sudo apt-get install build-essential
+      
+      - name: Install Kernel headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install linux-headers-$(uname -r)
+
+      - name: Build kernel object
+        run: make
+        continue-on-error: false # fail workflow if unsuccessful build
+
+      - name: build
