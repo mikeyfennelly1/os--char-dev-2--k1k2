@@ -6,6 +6,7 @@
  * @author Sarah McDonagh, Danny Quinn, Mikey Fennelly
  */
 
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/file.h>
@@ -14,18 +15,12 @@
 #include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
-#include "sysinfo_ioctl.h"
 
 #define DEVICE_NAME "sysinfo_cdev"
 
 static int major;
 static struct class *dev_class;
 static struct cdev sysinfo_cdev;
-
-static struct file_operations fops = {
-    .owner = THIS_MODULE,
-    .unlocked_ioctl = sysinfo_ioctl
-};
 
 static int __init sysinfo_cdev_init(void)
 {
@@ -69,17 +64,7 @@ static int __init sysinfo_cdev_init(void)
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
-    printk(KERN_INFO "sysinfo device opened\n");
-
-    if (atomic_read(&sysinfo_cdev))
-    {
-        return -EBUSY;
-    }
-
-    atomic_inc(&sysinfo_cdev);
-
-    fp->private_data = inode->i_private;
-
+    printk(KERN_INFO "%s opened\n", DEVICE_NAME);
     return 0;
 }
 
@@ -92,10 +77,21 @@ static void __exit sysinfo_cdev_exit(void)
     printk(KERN_INFO "Module unloaded\n");
 };
 
+long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+{
+    printk(KERN_INFO "IOCTL command received\n");
+    return 0;  // Return success
+}
+
+static struct file_operations fops = {
+    .owner = THIS_MODULE,
+    .open = sysinfo_open,
+    .unlocked_ioctl = sysinfo_ioctl
+};
 
 module_init(sysinfo_cdev_init);
 module_exit(sysinfo_cdev_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Mikey Fennelly");
-MODULE_DESCRIPTION("Produces event for another module's (K2) consumption.");
+MODULE_DESCRIPTION("Sysinfo kernel module");
