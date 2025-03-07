@@ -14,6 +14,7 @@
 #include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include "sysinfo_ioctl.h"
 
 #define DEVICE_NAME "sysinfo_cdev"
 
@@ -22,10 +23,11 @@ static struct class *dev_class;
 static struct cdev sysinfo_cdev;
 
 static struct file_operations fops = {
-    .owner = THIS_MODULE
+    .owner = THIS_MODULE,
+    .unlocked_ioctl = sysinfo_ioctl
 };
 
-static int __init sysinfo_cdev(void)
+static int __init sysinfo_cdev_init(void)
 {
     dev_t dev;
 
@@ -56,7 +58,7 @@ static int __init sysinfo_cdev(void)
     {
         printk("Failed to create device file for %s\n", DEVICE_NAME);
         class_destroy(dev_class);
-        cdev_del(&os__char_dev__k1);
+        cdev_del(&sysinfo_cdev);
         unregister_chrdev_region(dev, 1);
         return -1;
     }
@@ -64,6 +66,8 @@ static int __init sysinfo_cdev(void)
     printk(KERN_INFO "K1 loaded: /dev/%s\n", DEVICE_NAME);
     return 0;
 };
+
+
 
 static void __exit sysinfo_cdev_exit(void)
 {
@@ -74,8 +78,6 @@ static void __exit sysinfo_cdev_exit(void)
     printk(KERN_INFO "Module unloaded\n");
 };
 
-
-static int read()
 
 module_init(sysinfo_cdev_init);
 module_exit(sysinfo_cdev_exit);
