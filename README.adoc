@@ -10,7 +10,7 @@ Read the current value of the <<current-info-type, current_info_type>> from the 
 
 === ioctl()
 
-Change the information returned from the module.
+Change the current_info_type returned from the module.
 
 [[currnt-info-type]]
 == current_info_type
