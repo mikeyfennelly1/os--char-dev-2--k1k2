@@ -1,9 +1,9 @@
 /**
- * k1.c
+ * Sysinfo character device
  * 
- * A kernel module to read from a GPIO pin and publish to a named pipe.
+ * A kernel module to provide system information.
  * 
- * @author Mikey Fennelly
+ * @author Sarah McDonagh, Danny Quinn, Mikey Fennelly
  */
 
 #include <linux/module.h>
@@ -15,18 +15,17 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 
-#define DEVICE_NAME "os--char-dev--K1"
+#define DEVICE_NAME "sysinfo_cdev"
 
 static int major;
 static struct class *dev_class;
-static struct cdev os__char_dev__k1;
+static struct cdev sysinfo_cdev;
 
 static struct file_operations fops = {
     .owner = THIS_MODULE
 };
 
-// handler function for when module is inserted into kernel
-static int __init k1_init(void)
+static int __init sysinfo_cdev(void)
 {
     dev_t dev;
 
@@ -37,7 +36,7 @@ static int __init k1_init(void)
     }
     major = MAJOR(dev);
 
-    if (cdev_add(&os__char_dev__k1, dev, 1) < 0)
+    if (cdev_add(&sysinfo_cdev, dev, 1) < 0)
     {
         printk("Failed to add os--char-dev--k1\n");
         unregister_chrdev_region(dev, 1);
@@ -48,7 +47,7 @@ static int __init k1_init(void)
     if (IS_ERR(dev_class))
     {
         printk("Failed to register device class for %s\n", DEVICE_NAME);
-        cdev_del(&os__char_dev__k1);
+        cdev_del(&sysinfo_cdev);
         unregister_chrdev_region(dev, 1);
         return -1;
     }
@@ -66,18 +65,20 @@ static int __init k1_init(void)
     return 0;
 };
 
-// handler function for when module is removed from kernel
-static void __exit k1_exit(void)
+static void __exit sysinfo_cdev_exit(void)
 {
     device_destroy(dev_class, MKDEV(major, 0));
     class_destroy(dev_class);
-    cdev_del(&os__char_dev__k1);
+    cdev_del(&sysinfo_cdev);
     unregister_chrdev_region(MKDEV(major, 0), 1);
     printk(KERN_INFO "Module unloaded\n");
 };
 
-module_init(k1_init);
-module_exit(k1_exit);
+
+static int read()
+
+module_init(sysinfo_cdev_init);
+module_exit(sysinfo_cdev_exit);
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Mikey Fennelly");
