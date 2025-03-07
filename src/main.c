@@ -68,6 +68,12 @@ static int sysinfo_open(struct inode *inode, struct file *fp)
     return 0;
 }
 
+static int sysinfo_release(struct inode *inode, struct file *filep)
+{
+    printk(KERN_INFO "release\n");
+    return 0;
+}
+
 static void __exit sysinfo_cdev_exit(void)
 {
     device_destroy(dev_class, MKDEV(major, 0));
@@ -79,7 +85,8 @@ static void __exit sysinfo_cdev_exit(void)
 
 static struct file_operations fops = {
     .owner = THIS_MODULE,
-    .open = sysinfo_open
+    .open = sysinfo_open,
+    .release = sysinfo_release
 };
 
 module_init(sysinfo_cdev_init);
