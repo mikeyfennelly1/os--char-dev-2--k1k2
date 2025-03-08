@@ -15,56 +15,17 @@
 #include <linux/kernel.h>
 #include <linux/cdev.h>
 #include <linux/device.h>
+#include <linux/version.h>
 
 #define DEVICE_NAME "sysinfo_cdev"
 
-static int major;
-static struct class *dev_class;
+static dev_t dev_num;
 static struct cdev sysinfo_cdev;
-
-static int __init sysinfo_cdev_init(void)
-{
-    dev_t dev;
-
-    if (alloc_chrdev_region(&dev, 0, 1, DEVICE_NAME) < 0)
-    {
-        printk(KERN_ERR "Failed to allocate a major num for %s\n", DEVICE_NAME);
-        return -1;
-    }
-    major = MAJOR(dev);
-
-    if (cdev_add(&sysinfo_cdev, dev, 1) < 0)
-    {
-        printk("Failed to add %s\n", DEVICE_NAME);
-        unregister_chrdev_region(dev, 1);
-        return -1;
-    }
-
-    dev_class = class_create(DEVICE_NAME);
-    if (IS_ERR(dev_class))
-    {
-        printk("Failed to register device class for %s\n", DEVICE_NAME);
-        cdev_del(&sysinfo_cdev);
-        unregister_chrdev_region(dev, 1);
-        return -1;
-    }
-
-    if (device_create(dev_class, NULL, dev, NULL, DEVICE_NAME) == NULL)
-    {
-        printk("Failed to create device file for %s\n", DEVICE_NAME);
-        class_destroy(dev_class);
-        cdev_del(&sysinfo_cdev);
-        unregister_chrdev_region(dev, 1);
-        return -1;
-    }
-
-    printk(KERN_INFO "K1 loaded: /dev/%s\n", DEVICE_NAME);
-    return 0;
-};
+static struct class *sysinfo_dev_class;
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
-    printk(KERN_INFO "%s opened\n", DEVICE_NAME);
+    printk(KERN_INFO "Device %s opened\n", DEVICE_NAME);
     return 0;
 }
 
@@ -74,19 +35,69 @@ static int sysinfo_release(struct inode *inode, struct file *filep)
     return 0;
 }
 
-static void __exit sysinfo_cdev_exit(void)
-{
-    device_destroy(dev_class, MKDEV(major, 0));
-    class_destroy(dev_class);
-    cdev_del(&sysinfo_cdev);
-    unregister_chrdev_region(MKDEV(major, 0), 1);
-    printk(KERN_INFO "Module unloaded\n");
-};
-
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = sysinfo_open,
     .release = sysinfo_release
+};
+
+static int __init sysinfo_cdev_init(void)
+{
+    int ret;
+    
+    ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
+    if (ret < 0)
+    {
+        printk(KERN_INFO "Failed to allocate major\n");
+        return ret;
+    }
+    printk(KERN_INFO "Allocated Major: %d, Minor: %d\n", MAJOR(dev_num), MINOR(dev_num));
+
+    // initialize char device
+    cdev_init(&sysinfo_cdev, &fops);
+    sysinfo_cdev.owner = THIS_MODULE;
+
+    // add dev to kernel
+    ret = cdev_add(&sysinfo_cdev, dev_num, 1);
+    if (ret < 0)
+    {
+        pr_err("Failed to add cdev\n");
+        unregister_chrdev_region(dev_num, 1);
+        return ret;
+    }
+
+    sysinfo_dev_class = class_create(DEVICE_NAME);
+    if (IS_ERR(sysinfo_dev_class))
+    {
+        printk(KERN_INFO "Failed to create sysinfo_dev_class\n");
+        cdev_del(&sysinfo_cdev);
+        unregister_chrdev_region(dev_num, 1);
+        return PTR_ERR(sysinfo_dev_class);
+    }
+
+    // create a device node in /dev directory
+    if (device_create(sysinfo_dev_class, NULL, dev_num, NULL, DEVICE_NAME) == NULL)
+    {
+        printk(KERN_INFO "Failed to create device\n");
+        class_destroy(sysinfo_dev_class);
+        cdev_del(&sysinfo_cdev);
+        unregister_chrdev_region(dev_num, 1);
+        return -1;
+    }
+
+    printk(KERN_INFO "Sysinfo char dev initialized\n");
+    return 0;
+};
+
+static void __exit sysinfo_cdev_exit(void)
+{
+    static int major;
+    major = MAJOR(dev_num);
+    device_destroy(sysinfo_dev_class, MKDEV(major, 0));
+    class_destroy(sysinfo_dev_class);
+    cdev_del(&sysinfo_cdev);
+    unregister_chrdev_region(MKDEV(major, 0), 1);
+    printk(KERN_INFO "Module unloaded\n");
 };
 
 module_init(sysinfo_cdev_init);
