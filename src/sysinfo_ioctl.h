@@ -1,1 +1,0 @@
-static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
