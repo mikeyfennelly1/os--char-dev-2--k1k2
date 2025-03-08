@@ -16,6 +16,7 @@
 #include <linux/cdev.h>
 #include <linux/device.h>
 #include <linux/version.h>
+#include <linux/proc_fs.h>
 
 #define MY_IOCTL_MAGIC 'M'
 #define MY_IOCTL_CMD_1 _IO(MY_IOCTL_MAGIC, 1)
@@ -79,6 +80,8 @@ static struct file_operations fops = {
     .unlocked_ioctl = sysinfo_ioctl
 };
 
+static struct proc_dir_entry *proc_entry;
+
 static int __init sysinfo_cdev_init(void)
 {
     int ret;
@@ -122,6 +125,14 @@ static int __init sysinfo_cdev_init(void)
         unregister_chrdev_region(dev_num, 1);
         return -1;
     }
+
+    proc_entry = proc_create("my_proc_file", 0666, NULL, &proc_fops);
+    if (!proc_entry) {
+        pr_err("Failed to create proc file\n");
+        return -ENOMEM;
+    }
+
+    pr_info("/proc/my_proc_file created\n");
 
     printk(KERN_INFO "Sysinfo char dev initialized\n");
     return 0;
