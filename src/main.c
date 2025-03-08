@@ -18,16 +18,56 @@
 #include <linux/version.h>
 #include <linux/proc_fs.h>
 
+// ioctl definitions
 #define MY_IOCTL_MAGIC 'M'
 #define MY_IOCTL_CMD_1 _IO(MY_IOCTL_MAGIC, 1)
 #define MY_IOCTL_CMD_2 _IOR(MY_IOCTL_MAGIC, 2, int)
 #define MY_IOCTL_CMD_3 _IOW(MY_IOCTL_MAGIC, 3, int)
 
+// device definitions
 #define DEVICE_NAME "sysinfo_cdev"
 
+// device constants
 static dev_t dev_num;
 static struct cdev sysinfo_cdev;
 static struct class *sysinfo_dev_class;
+
+// proc file definitions
+#define PROC_FILE_NAME "sysinfo"
+
+/* /proc file initialisation and functions*/
+
+static ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
+{
+    printk("proc file read\n");
+    return 0;
+};
+
+struct proc_dir_entry *proc_entry;
+
+static const struct proc_ops proc_ops = {
+    .proc_read = sysinfo_proc_read,
+};
+
+static int __init char_device_proc_init(void)
+{
+    // Create the proc file at /proc/PROC_FILE_NAME
+    proc_entry = proc_create(PROC_FILE_NAME, 0666, NULL, &proc_ops);
+    if (!proc_entry) {
+        pr_err("Failed to create /proc/%s\n", PROC_FILE_NAME);
+        return -ENOMEM;
+    }
+
+    pr_info("%s created\n", PROC_FILE_NAME);
+    return 0;
+};
+
+static void __exit char_device_proc_exit(void)
+{
+    // Remove the proc file
+    proc_remove(proc_entry);
+    pr_info("/proc/%s removed\n", PROC_FILE_NAME);
+};
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
@@ -73,6 +113,7 @@ static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg
     return 0;
 }
 
+// file operations for interacting with the device
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = sysinfo_open,
@@ -80,12 +121,16 @@ static struct file_operations fops = {
     .unlocked_ioctl = sysinfo_ioctl
 };
 
-static struct proc_dir_entry *proc_entry;
-
+// Initialize the character device
+//
+// As this is a device, the file operations defined in fops
+// are definitions for file operations that can be performed on
+// the device via the /dev filesystem
 static int __init sysinfo_cdev_init(void)
 {
     int ret;
     
+    // allocate a major and minor number for the device
     ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
     if (ret < 0)
     {
@@ -94,11 +139,12 @@ static int __init sysinfo_cdev_init(void)
     }
     printk(KERN_INFO "Allocated Major: %d, Minor: %d\n", MAJOR(dev_num), MINOR(dev_num));
 
-    // initialize char device
+    // initialize device as a character device
     cdev_init(&sysinfo_cdev, &fops);
+    // set owner of the character device to be this module
     sysinfo_cdev.owner = THIS_MODULE;
 
-    // add dev to kernel
+    // add device to kernel
     ret = cdev_add(&sysinfo_cdev, dev_num, 1);
     if (ret < 0)
     {
@@ -107,6 +153,7 @@ static int __init sysinfo_cdev_init(void)
         return ret;
     }
 
+    // create a device class, use DEVICE_NAME as the name for the class
     sysinfo_dev_class = class_create(DEVICE_NAME);
     if (IS_ERR(sysinfo_dev_class))
     {
@@ -126,13 +173,11 @@ static int __init sysinfo_cdev_init(void)
         return -1;
     }
 
-    proc_entry = proc_create("my_proc_file", 0666, NULL, &proc_fops);
-    if (!proc_entry) {
-        pr_err("Failed to create proc file\n");
-        return -ENOMEM;
+    int proc_init = char_device_proc_init();
+    if (proc_init < 0)
+    {
+        printk("----- Could not create proc file");
     }
-
-    pr_info("/proc/my_proc_file created\n");
 
     printk(KERN_INFO "Sysinfo char dev initialized\n");
     return 0;
@@ -140,15 +185,20 @@ static int __init sysinfo_cdev_init(void)
 
 static void __exit sysinfo_cdev_exit(void)
 {
+    // remove the device from the kernel
     static int major;
     major = MAJOR(dev_num);
-    device_destroy(sysinfo_dev_class, MKDEV(major, 0));
-    class_destroy(sysinfo_dev_class);
-    cdev_del(&sysinfo_cdev);
-    unregister_chrdev_region(MKDEV(major, 0), 1);
+    device_destroy(sysinfo_dev_class, MKDEV(major, 0)); // destroy device
+    class_destroy(sysinfo_dev_class); // destroy device class
+    cdev_del(&sysinfo_cdev); // delete character device
+    unregister_chrdev_region(MKDEV(major, 0), 1); // unregister the major and minor number of device from kernel
+
+    char_device_proc_exit();
+    
     printk(KERN_INFO "Module unloaded\n");
 };
 
+// Initialize char device on module init
 module_init(sysinfo_cdev_init);
 module_exit(sysinfo_cdev_exit);
 
