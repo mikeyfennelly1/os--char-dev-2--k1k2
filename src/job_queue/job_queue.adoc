@@ -1,0 +1,55 @@
+= job_queue
+
+This is a data structure that you can use to create your lists of jobs.
+
+== What is a job?
+I use the term job to refer to a list of tasks that are to be done in a high level current_info_mode. For example; if the current_info_mode is set to CPU, then the list of jobs could be:
+
+1. get_cpu_speed_hz
+2. get_cpu_architecture
+3. get_core_count
+
+The job queue then, would walk the list of jobs, and execute each job until all jobs in the list are complete.
+
+== The job_queue API
+
+A job queue is just a struct, and some associated methods.
+
+1. Creating an empty job_queue.
+2. Adding a job to the queue.
+
+Here is an example:
+
+[source, c]
+----
+int cpu_jobs()
+{
+    job_queue cpu_jobs;
+
+    add_job(&cpu_jobs, &get_cpu_speed_hz);
+}
+
+int cpu_speed_hz()
+{
+    // code to get CPU speed in hz
+}
+----
+
+=== Characteristics of a job
+
+A job should:
+
+1. Retrieve some information.
+2. Have some JSON format to it.
+
+==== job_result
+
+typedef job_result {
+    information_name: char*,
+    information_value: char*
+}
+
+=== What we can do with a job_result
+
+1. Write to a userspace JSON file.
+2. Write to the /proc file.
