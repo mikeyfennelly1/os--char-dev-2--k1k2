@@ -1,6 +1,5 @@
 obj-m += main.o
 
-PROJ_BUILD_DIR := ./build
 KERNEL_BUILD_DIR := /lib/modules/$(shell uname -r)/build
 
 all: build post_build_cleanup
@@ -22,8 +21,3 @@ post_build_cleanup:
 
 clean:
 	make -C $(KERNEL_BUILD_DIR) M=$(shell pwd) clean
-
-# print local vars when debugging
-print_vars:
-	echo "PROJ_BUILD_DIR=$(PROJ_BUILD_DIR)"
-	echo "KERNEL_BUILD_DIR=$(KERNEL_BUILD_DIR)"
