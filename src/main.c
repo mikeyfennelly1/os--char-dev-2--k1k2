@@ -58,7 +58,7 @@ static int __init char_device_proc_init(void)
         return -ENOMEM;
     }
 
-    pr_info("%s created\n", PROC_FILE_NAME);
+    pr_info("/proc/%s created\n", PROC_FILE_NAME);
     return 0;
 };
 
