@@ -1,4 +1,4 @@
-= job_queue
+= job
 
 This is a data structure that you can use to create your lists of jobs.
 
@@ -11,22 +11,22 @@ I use the term job to refer to a list of tasks that are to be done in a high lev
 
 The job queue then, would walk the list of jobs, and execute each job until all jobs in the list are complete.
 
-== The job_queue API
+== The job API
 
 A job queue is just a struct, and some associated methods.
 
-1. Creating an empty job_queue.
+1. Creating an empty job.
 2. Adding a job to the queue.
 
 Here is an example:
 
 [source, c]
 ----
-int cpu_jobs()
+int cpu_job()
 {
-    job_queue cpu_jobs;
+    job cpu_steps;
 
-    add_job(&cpu_jobs, &get_cpu_speed_hz);
+    add_step(&cpu_job, &get_cpu_speed_hz);
 }
 
 int cpu_speed_hz()
@@ -35,21 +35,21 @@ int cpu_speed_hz()
 }
 ----
 
-=== Characteristics of a job
+=== Characteristics of a step
 
-A job should:
+A step should:
 
 1. Retrieve some information.
 2. Have some JSON format to it.
 
-==== job_result
+==== step_result
 
-typedef job_result {
+typedef step_result {
     information_name: char*,
     information_value: char*
 }
 
-=== What we can do with a job_result
+=== What we can do with a step_result
 
 1. Write to a userspace JSON file.
 2. Write to the /proc file.
