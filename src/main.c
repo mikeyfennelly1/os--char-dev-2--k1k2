@@ -6,7 +6,7 @@
 
 // Initialize char device on module init
 
-
+#include "device/sysinfo_dev.h"
 
 module_init(sysinfo_cdev_init);
 module_exit(sysinfo_cdev_exit);
