@@ -7,20 +7,20 @@ KERNEL_BUILD_DIR := /lib/modules/$(shell uname -r)/build
 
 
 BUILD_DIR := ./build
-DEVICE_SRC_DIR := ./src/device
-DEVICE_SRC_FILES := $(wildcard $(DEVICE_SRC_DIR)/*.c)
-DEVICE_OBJ_DIR := $(BUILD_DIR)/device
-DEVICE_OBJS := $(patsubst $(DEVICE_SRC_DIR)/%.c, $(DEVICE_OBJ_DIR)/%.o, $(DEVICE_SRC_FILES))
+JOB_SRC_DIR := ./src/job
+JOB_SRC_FILES := $(wildcard $(JOB_SRC_DIR)/*.c)
+JOB_OBJ_DIR := $(BUILD_DIR)/job
+JOB_OBJS := $(patsubst $(JOB_SRC_DIR)/%.c, $(JOB_OBJ_DIR)/%.o, $(JOB_SRC_FILES))
 
-all: $(DEVICE_OBJS)
+all: $(JOB_OBJS)
 
-# rule to compile .c files in ./src/device to ./obj/device .o files
-$(DEVICE_OBJ_DIR)/%.o: $(DEVICE_SRC_DIR)/%.c | $(DEVICE_OBJ_DIR)
+# rule to compile .c files in ./src/job to ./obj/job .o files
+$(JOB_OBJ_DIR)/%.o: $(JOB_SRC_DIR)/%.c | $(JOB_OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# ensure ./build/device exists
-$(DEVICE_OBJ_DIR): $(BUILD_DIR)
-	mkdir -p $(DEVICE_OBJ_DIR)
+# ensure ./build/job exists
+$(JOB_OBJ_DIR): $(BUILD_DIR)
+	mkdir -p $(JOB_OBJ_DIR)
 
 # ensure the build directory exists
 $(BUILD_DIR):
