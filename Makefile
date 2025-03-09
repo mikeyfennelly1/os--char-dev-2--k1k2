@@ -5,24 +5,33 @@ CFLAGS := -Wall -Wextra
 TARGET := program
 KERNEL_BUILD_DIR := /lib/modules/$(shell uname -r)/build
 
-
 BUILD_DIR := ./build
+TEST_DIR := ./test
+
+# variables for job module
 JOB_SRC_DIR := ./src/job
-JOB_SRC_FILES := $(wildcard $(JOB_SRC_DIR)/*.c)
-JOB_OBJ_DIR := $(BUILD_DIR)/job
-JOB_OBJS := $(patsubst $(JOB_SRC_DIR)/%.c, $(JOB_OBJ_DIR)/%.o, $(JOB_SRC_FILES))
+JOB_SRCS := $(wildcard $(JOB_SRC_DIR)/*.c)
+JOB_BUILD_DIR := ./build/job # build directory for job module
+JOB_OBJS := $(patsubst $(JOB_SRC_DIR)/%.c, $(JOB_BUILD_DIR)/%.o, $(JOB_SRCS))
 
-all: $(JOB_OBJS)
+JOB_TEST_SRCS := $(patsubst $(JOB_SRC_DIR)/%.c, $(TEST_DIR)/job/test_%.c, $(JOB_SRCS))
 
-# rule to compile .c files in ./src/job to ./obj/job .o files
-$(JOB_OBJ_DIR)/%.o: $(JOB_SRC_DIR)/%.c | $(JOB_OBJ_DIR)
+# Default rule
+all: create_job_build_directory
+	@echo "---\n"
+	@echo "JOB_SRCS: $(JOB_SRCS)"
+	@echo "JOB_TEST_SRCS: $(JOB_TEST_SRCS)"
+	@echo "\n---"
+
+# compile job rule
+$(JOB_BUILD_DIR): $(JOB_SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # ensure ./build/job exists
-$(JOB_OBJ_DIR): $(BUILD_DIR)
-	mkdir -p $(JOB_OBJ_DIR)
+create_job_build_directory:
+	mkdir -p $(JOB_BUILD_DIR)
 
-# ensure the build directory exists
+# ensure ./build exists
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 

@@ -25,7 +25,7 @@ int main(void)
     if (!CU_add_test(suite, "test_job", test_job))
     {
         CU_cleanup_registry();
-        return CU_get_error();        
+        return CU_get_error();
     }
 
     CU_basic_set_mode(CU_BRM_VERBOSE);
