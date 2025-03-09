@@ -81,14 +81,17 @@ static struct file_operations fops = {
 // are definitions for file operations that can be performed on
 // the device via the /dev filesystem
 static int __init sysinfo_cdev_init(void)
-{
-    int ret;
-    
-    // allocate a major and minor number for the device
-    ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
-    if (ret < 0)
+{int append_to_proc(struct seq_file *m, void *v)
     {
-        printk(KERN_INFO "Failed to allocate major\n");
+        seq_printf(m, "initial content"\n);
+        seq_printf(m, "more data\n");
+        return 0;
+    };
+    
+    static int my_proc_open(struct inode *inode, struct file *file)
+    {
+        return single_open(file, my_proc_show, NULL);
+    }r\n");
         return ret;
     }
     printk(KERN_INFO "Allocated Major: %d, Minor: %d\n", MAJOR(dev_num), MINOR(dev_num));
