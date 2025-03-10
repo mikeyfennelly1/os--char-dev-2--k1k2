@@ -1,0 +1,71 @@
+= job.h
+:toc:
+
+A job is a data structure that you can use to create sysinfo 'jobs'.
+
+== What is a job
+
+Basically a job is a list of 'steps', and this data structure (which is essentially a linked list) allows you to create predefined sysinfo lists, through a standard API.
+
+== How to create a job
+
+=== 1. Include job.h
+
+Firstly, include the job header file in your module's _.c_ file.
+
+[source, c]
+----
+#include "../job/job.h"
+----
+
+=== 2. Create a blank job
+
+Here is an example.
+
+[source, c]
+----
+// job to get CPU information from kernel space
+static struct Job cpu = {
+    // title of the job 
+    "cpu",
+
+    // head (aka first) step of the job
+    //
+    // Initially I don't have one, so I will leave it as NULL
+    NULL
+};
+----
+
+=== 3. Create a function that returns a key_value_pair.
+
+Each step is a pointer to a function that returns a key_value_pair struct (_see job.h_).
+
+[source, c]
+----
+static key_value_pair* get_cpu_speed_hz(void)
+{
+    // malloc the key_value_pair
+    key_value_pair* cpu_speed_step_kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
+
+    // set the fields of the key_value_pair you just malloc'd
+    //
+    // NOTE: Yours will be retrieving data from kernel space,
+    //       I just put in some dummy data for this example.
+    cpu_speed_step_kvp->key = "cpu_speed_hz";
+    cpu_speed_step_kvp->value = "3000Hz";
+
+    // return pointer to key_value_pair on heap
+    return cpu_speed_step_kvp;
+};
+----
+
+=== 4. Add the function as a 'step' via the add_step_to_job() function
+
+[source, c]
+----
+int main(void)
+{
+    add_step_to_job(&cpu, &get_cpu_speed_hz);
+    run_job(&cpu);
+}
+----
