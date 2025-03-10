@@ -1,4 +1,5 @@
 = job.h
+:toc:
 
 A job is a data structure that you can use to create sysinfo 'jobs'.
 
