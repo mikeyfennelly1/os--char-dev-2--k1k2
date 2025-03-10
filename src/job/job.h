@@ -20,5 +20,5 @@ typedef struct Job {
     Step head;
 } Job;
 
-void add_step_to_job(Job* job, Step* step_to_add);
+void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func);
 void run_job(Job* j);
