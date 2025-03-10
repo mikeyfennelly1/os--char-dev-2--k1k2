@@ -1,7 +1,9 @@
 /**
  * A kernel module to provide system information.
  * 
- * @author Sarah McDonagh, Danny Quinn, Mikey Fennelly
+ * @author Sarah McDonagh
+ * @author Danny Quinn
+ * @author Mikey Fennelly
  */
 
 // Initialize char device on module init

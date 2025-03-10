@@ -1,0 +1,17 @@
+= procfs
+
+This is an API that allows you to perform operations with the /proc filesystem for this module.
+
+== Create the /proc filesystem
+
+[NOTE]
+----
+This should only be used once in the application, that being on kernel module initialization.
+----
+
+[source, c]
+----
+create_procfs();
+----
+
+== Redirect output to the /proc filesystem
