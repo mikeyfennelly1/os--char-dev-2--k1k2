@@ -1,5 +1,5 @@
 /**
- * A kernel module to provide system information.
+ * A kernel module to provide system information to userspace.
  * 
  * @author Sarah McDonagh
  * @author Danny Quinn
@@ -10,7 +10,9 @@
 
 #include "device/sysinfo_dev.h"
 
+// register the init function for the device
 module_init(sysinfo_cdev_init);
+// register the exit function for the device
 module_exit(sysinfo_cdev_exit);
 
 MODULE_LICENSE("GPL");
