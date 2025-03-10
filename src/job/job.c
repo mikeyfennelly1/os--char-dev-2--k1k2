@@ -1,42 +1,40 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// write retrieved data to /proc directory
-// default mode
-#define WRITE_TO_PROC 1
-// write job data to json file provided by
-// user space calling process
-#define WRITE_TO_USER_SPACE_JSON 2
+// return type for a step function
+typedef struct key_value_pair {
+    char* key;
+    char* value;
+} key_value_pair;
 
-typedef struct {
-    // first step in the job
-    Step head = NULL;
+typedef key_value_pair* (*GetKVPFuncPtr)(void);
 
-    // add a step to the job
-    void (*add_job)();
-    
-    // mode of operation for the job
-    int mode;
-    
-    // run the job
-    void (*run)();
-
-} Job;
-
-typedef struct {
-    title char*,
-    result char*
-} STEP_INFORMATION;
-
-typedef struct {
+typedef struct Step {
     // function to run the step
-    STEP_INFORMATION (*get_data)();
-    
-    Step next_step = NULL;
+    GetKVPFuncPtr get_kvp;
+    struct Step* next;
 } Step;
 
-int job(void)
+typedef struct Job {
+    char* job_title;
+    Step head;
+} Job;
+
+// add a Step to a Job
+void add_step_to_job(Job* job, Step* step_to_add)
 {
-    printf("test print");
-    return 1;
+    Step* new_step = (Step*)malloc(sizeof(Step));
+    new_step->get_kvp = step_to_add->get_kvp;
+    new_step->next = &job->head; 
+    job->head = *new_step;
+}
+
+void run_job(Job* j)
+{
+    Step cur = j->head;
+    while (cur.next)
+    {
+        key_value_pair* kvp = cur.get_kvp();
+        printf("%s:%s\n", kvp->key, kvp->value);
+    }
 }
