@@ -49,8 +49,15 @@ void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
     return;
 }
 
-void run_job(Job* j)
+/**
+ * Runs the job (gets the key-value information for each step)
+ * and writes the contents to a buffer on the heap.
+ *
+ * @return string buffer that contains job data in key-value form.
+ */
+char** run_job(Job* j)
 {
+
     Step* cur = j->head;
     while (cur)
     {
