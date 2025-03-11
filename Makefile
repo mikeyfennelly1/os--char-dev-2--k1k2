@@ -1,34 +1,25 @@
-# Kernel build system
-KERNEL_SRC := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
-
-# Compiler settings
 CC := gcc
 CFLAGS := -Wall -Wextra -g -I./src
-LDFLAGS := -lrt -lpthread  # Adjust as needed
 
-# Directories
-SRC_DIR := src
+JOB_SRCS := $(wildcard ./src/device/job/*.c)
+JOB_OBJS := $(patsubst %.c, %.o, $(JOB_SRCS))
 
-# Object files
-KERNEL_OBJS := $(KERNEL_SOURCES:.c=.o)
+all: job
 
-# Test sources
-TESTS := $(JOB_DIR)/test_file_usage.c
-TEST_OBJS := $(TESTS:.c=.o)
-JOB_OBJ := $(JOB_DIR)/job.o
-
-# Default target
-all: module tests
+job: $(JOB_SRCS:.c=.o)
 
 # pattern rule for source to object compilation
-%.o: %.c build_dir
+%.o: %.c build_dir_exists
 	$(CC) $(CFLAGS) -c $< -o ./build/$(notdir $@)
 
-build_dir:
+build_dir_exists:
 	mkdir -p $(PWD)/build
 
 # Clean build files
 clean:
-	@$(MAKE) -C $(KERNEL_SRC) M=$(PWD) clean
-	@rm -f $(KERNEL_OBJS) $(TEST_OBJS) $(TESTS:.c=)
+	@rm -rf ./build
+
+install:
+	sudo apt update
+	sudo apt install libcunit1 libcunit1-doc libcunit1-dev

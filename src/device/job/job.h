@@ -1,3 +1,6 @@
+#ifndef JOB_H
+#define JOB_H
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -22,3 +25,5 @@ typedef struct Job {
 
 void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func);
 void run_job(Job* j);
+
+#endif
