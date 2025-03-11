@@ -15,10 +15,10 @@ void init_job_buffer(DynamicJobBuffer *b)
 {
     b->capacity = INITIAL_CAPACITY;
     b->size = 0;
-    b->data = (char *)malloc(b->capacity);
+    b->data = (char *)kmalloc(b->capacity);
     if (!b->data)
     {
-        printf("Could not increase size of backing array in job buffer\n");
+        printk(KERN_ERR "Could not increase size of backing array in job buffer\n");
         exit(1);
     }
     b->data[0] = '\0';
@@ -29,7 +29,7 @@ void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
     char *new_data = (char *)realloc(b->data, new_capacity);
     if (!new_data)
     {
-        printf("Memory allocation failed\n");
+        printk(KERN_ERR "Memory allocation failed\n");
         exit(1);
     }
     b->data = new_data;
@@ -56,7 +56,7 @@ void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
 
 void free_job_buffer(DynamicJobBuffer *b)
 {
-    free(b->data);
+    kfree(b->data);
     b->data = NULL;
     b->size = 0;
     b-> capacity = 0;
