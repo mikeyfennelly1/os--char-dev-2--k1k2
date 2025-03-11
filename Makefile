@@ -1,53 +1,34 @@
-obj-m += main.o
+# Kernel build system
+KERNEL_SRC := /lib/modules/$(shell uname -r)/build
+PWD := $(shell pwd)
 
+# Compiler settings
 CC := gcc
-CFLAGS := -Wall -Wextra
-TARGET := program
-KERNEL_BUILD_DIR := /lib/modules/$(shell uname -r)/build
+CFLAGS := -Wall -Wextra -g -I./src
+LDFLAGS := -lrt -lpthread  # Adjust as needed
 
-BUILD_DIR := ./build
-TEST_BUILD_DIR := ./build/tests  # Directory for test binaries
-JOB_SRC_DIR := ./src/job
-JOB_SRCS := $(wildcard $(JOB_SRC_DIR)/*.c)
-JOB_BUILD_DIR := ./build/job
-JOB_OBJS := $(patsubst $(JOB_SRC_DIR)/%.c, $(JOB_BUILD_DIR)/%.o, $(JOB_SRCS))
+# Directories
+SRC_DIR := src
 
-JOB_TEST_SRC_DIR := ./test/job
-JOB_TEST_SRCS := $(wildcard $(JOB_TEST_SRC_DIR)/*.c)
-JOB_TEST_OBJS := $(patsubst $(JOB_TEST_SRC_DIR)/%.c, $(TEST_BUILD_DIR)/%.o, $(TEST_SRCS))
-TEST_BINARIES := $(patsubst $(JOB_TEST_SRC_DIR)/%.c, $(TEST_BUILD_DIR)/%, $(TEST_SRCS))
+# Object files
+KERNEL_OBJS := $(KERNEL_SOURCES:.c=.o)
 
-JOB_BUILD_OBJECTS := $(JOB_BUILD_DIR)/%.o
+# Test sources
+TESTS := $(JOB_DIR)/test_file_usage.c
+TEST_OBJS := $(TESTS:.c=.o)
+JOB_OBJ := $(JOB_DIR)/job.o
 
-# Default rule
-all: create_job_build_directory create_test_build_directory build_test_srcs_to_test_objs $(JOB_OBJS) $(TEST_BINARIES)
-	@echo "---\n"
-	@echo "JOB_SRCS: $(JOB_SRCS)"
-	@echo "JOB_OBJS: $(JOB_OBJS)"
-	@echo "TEST_SRCS: $(TEST_SRCS)"
-	@echo "TEST_BINARIES: $(TEST_BINARIES)"
-	@echo "\n---"
+# Default target
+all: module tests
 
-# compile job.o rule
-$(JOB_BUILD_DIR)/%.o: $(JOB_SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# pattern rule for source to object compilation
+%.o: %.c build_dir
+	$(CC) $(CFLAGS) -c $< -o ./build/$(notdir $@)
 
-# pattern rule for object file creation from source
-$(TEST_BUILD_DIR)/%.o: $(TEST_SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+build_dir:
+	mkdir -p $(PWD)/build
 
-# link test binaries with job.o
-$(TEST_BUILD_DIR)/%: $(TEST_BUILD_DIR)/%.o $(JOB_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# ensure ./build/job exists
-create_job_build_directory:
-	@mkdir -p $(JOB_BUILD_DIR)
-
-# ensure ./build/tests exists
-create_test_build_directory:
-	@mkdir -p $(TEST_BUILD_DIR)
-
-# clean rule
+# Clean build files
 clean:
-	@rm -rf $(BUILD_DIR)
+	@$(MAKE) -C $(KERNEL_SRC) M=$(PWD) clean
+	@rm -f $(KERNEL_OBJS) $(TEST_OBJS) $(TESTS:.c=)
