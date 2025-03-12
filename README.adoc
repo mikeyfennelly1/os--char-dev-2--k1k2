@@ -23,5 +23,6 @@ This is the single sysinfo value that is returned from the module. The available
 
 [source, bash]
 ----
-sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
+sudo make install
 ----
+
