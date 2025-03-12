@@ -66,16 +66,3 @@ void free_job_buffer(DynamicJobBuffer *b)
     b->size = 0;
     b-> capacity = 0;
 }
-
-int main() {
-    DynamicJobBuffer* buffer =  init_job_buffer();
-
-    append_to_job_buffer(buffer, "Hello, ");
-    append_to_job_buffer(buffer, "world!");
-    append_to_job_buffer(buffer, " How are you?");
-
-    printf("Buffer content: %s\n", buffer->data);
-    
-    free_job_buffer(buffer);
-    return 0;
-}

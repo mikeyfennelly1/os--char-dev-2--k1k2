@@ -48,6 +48,6 @@ void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func);
  * @arg target_buf - the buffer the caller wants data to be written to.
  * @return string buffer that contains job data in key-value form.
  */
-char** run_job(Job* j, char** target_buf);
+char* run_job(Job* j);
 
 #endif
