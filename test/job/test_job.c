@@ -14,19 +14,19 @@ static struct Job cpu = {
     NULL
 };
 
-// Get CPU speed in Hz from kernel space
 static key_value_pair* get_cpu_speed_hz(void)
 {
-    // malloc the key_value_pair
-    key_value_pair* cpu_speed_step_kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
+    add_step_to_job(&cpu, &get_cpu_speed_hz);
+    
+    char** job_data = run_job(&cpu);
 
-    // set the fields of the key_value_pair you just malloc'd
-    cpu_speed_step_kvp->key = "cpu_speed_hz";
-    cpu_speed_step_kvp->value = "3000Hz";
-
-    // return pointer to key_value_pair on heap
-    return cpu_speed_step_kvp;
+    free(data_buffer);
 };
+
+void test_cpu_job_output(void)
+{
+    
+}
 
 int main(void)
 {
@@ -37,7 +37,7 @@ int main(void)
     }
 
     // create test suite
-    CU_pSuite suite = CU_add_suite("Test suite for test flow", NULL, NULL);
+    CU_pSuite suite = CU_add_suite("Job", NULL, NULL);
     if (!suite)
     {
         CU_cleanup_registry();

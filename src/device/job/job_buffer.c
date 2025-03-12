@@ -11,17 +11,22 @@ typedef struct {
     ssize_t capacity;   // allocated capacity of the buffer
 } DynamicJobBuffer;
 
-void init_job_buffer(DynamicJobBuffer *b)
+/**
+ * Initialize a DynamicJobBuffer.
+ */
+DynamicJobBuffer* init_job_buffer(void)
 {
+    DynamicJobBuffer *b = malloc(sizeof(DynamicJobBuffer));
     b->capacity = INITIAL_CAPACITY;
     b->size = 0;
-    b->data = (char *)kmalloc(b->capacity);
+    b->data = (char *)malloc(b->capacity);
     if (!b->data)
     {
-        printk(KERN_ERR "Could not increase size of backing array in job buffer\n");
+        printf("Could not increase size of backing array in job buffer\n");
         exit(1);
     }
     b->data[0] = '\0';
+    return b;
 }
 
 void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
@@ -29,7 +34,7 @@ void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
     char *new_data = (char *)realloc(b->data, new_capacity);
     if (!new_data)
     {
-        printk(KERN_ERR "Memory allocation failed\n");
+        printf("Memory allocation failed\n");
         exit(1);
     }
     b->data = new_data;
@@ -39,8 +44,8 @@ void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
 void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
 {
     size_t text_len = strlen(text);
-
-    if (b->size + text_len + 1 > b->capacity)
+    long int* buffer_size = (long int*)b->size;
+    if (*buffer_size + text_len + 1 > (unsigned long)b->capacity)
     {
         size_t new_capacity = b->capacity * GROWTH_FACTOR;
         while (new_capacity < b->size + text_len + 1)
@@ -56,22 +61,21 @@ void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
 
 void free_job_buffer(DynamicJobBuffer *b)
 {
-    kfree(b->data);
+    free(b->data);
     b->data = NULL;
     b->size = 0;
     b-> capacity = 0;
 }
 
 int main() {
-    DynamicJobBuffer buffer;
-    init_job_buffer(&buffer);
+    DynamicJobBuffer* buffer =  init_job_buffer();
 
-    append_to_job_buffer(&buffer, "Hello, ");
-    append_to_job_buffer(&buffer, "world!");
-    append_to_job_buffer(&buffer, " How are you?");
+    append_to_job_buffer(buffer, "Hello, ");
+    append_to_job_buffer(buffer, "world!");
+    append_to_job_buffer(buffer, " How are you?");
 
-    printf("Buffer content: %s\n", buffer.data);
+    printf("Buffer content: %s\n", buffer->data);
     
-    free_job_buffer(&buffer);
+    free_job_buffer(buffer);
     return 0;
 }
