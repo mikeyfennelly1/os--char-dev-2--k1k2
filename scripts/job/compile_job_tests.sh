@@ -1,6 +1,7 @@
 #!/bin/bash
 
-mkdir -p ../../build/test
+test_build_dir="./build/test"
+test_src="./test/job/test_job.c"
+mkdir -p ${test_dir}
 
-cd ../../test/job/
-gcc -Wall -Wextra test_job.c ../../build/job.o -o ../../build/test/test_job
+gcc -Wall -Wextra ${test_src} -o ${test_build_dir}/test_job -lcunit -ljson-c -I./${test_build_dir}

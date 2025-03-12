@@ -1,6 +1,6 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
-#include "../../src/device/job/job.h"
+#include "./build/job.h"
 
 #define TEST_KEY "cpu_speed_hz"
 #define TEST_VALUE "3000Hz"
@@ -21,6 +21,11 @@ static key_value_pair* get_cpu_speed_hz(void)
 {
     // malloc the key_value_pair
     key_value_pair* cpu_speed_step_kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
+    if (cpu_speed_step_kvp == NULL)
+    {
+        printf("Could not malloc a new job\n");
+        exit(1);
+    }
 
     // set the fields of the key_value_pair you just malloc'd
     //
@@ -37,8 +42,9 @@ static key_value_pair* get_cpu_speed_hz(void)
 // the above CPU job is as expected 
 void test_cpu_job_output(void)
 {
+    add_step_to_job(&cpu, get_cpu_speed_hz);
     char* cpu_json = run_job(&cpu);
-    printf("%d\n", cpu_json);
+    printf("%s\n", cpu_json);
 
     char* actual = run_job(&cpu);
     char* expected = "{\n\tcpu_speed_hz:3000Hz\n}";
