@@ -12,5 +12,7 @@ typedef struct {
 
 void init_job_buffer(DynamicJobBuffer *b);
 void resize_job_buffer(DynamicJobBuffer *b, size_t new_capactiy);
+void append_to_job_buffer(DynamicJobBuffer *b, const char* text);
+void free_job_buffer(DynamicJobBuffer *b);
 
 #endif

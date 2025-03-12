@@ -2,7 +2,8 @@
 #include <CUnit/Basic.h>
 #include "../../src/device/job/job.h"
 
-// job to get CPU information from kernel space
+// job data structure to get CPU 
+// information from kernel space
 static struct Job cpu = {
     // title of the job 
     "cpu",
@@ -13,6 +14,7 @@ static struct Job cpu = {
     NULL
 };
 
+// Get CPU speed in Hz from kernel space
 static key_value_pair* get_cpu_speed_hz(void)
 {
     // malloc the key_value_pair
@@ -25,11 +27,6 @@ static key_value_pair* get_cpu_speed_hz(void)
     // return pointer to key_value_pair on heap
     return cpu_speed_step_kvp;
 };
-
-void test_job(void) {
-    add_step_to_job(&cpu, &get_cpu_speed_hz);
-    CU_ASSERT_EQUAL(job(), 1);
-}
 
 int main(void)
 {

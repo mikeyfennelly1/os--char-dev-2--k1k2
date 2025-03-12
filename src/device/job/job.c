@@ -1,5 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "./job_buffer.h"
+
+#define JSON_MODE 1
+#define KVP_MODE 2
 
 // return type for a step function
 typedef struct key_value_pair {
@@ -50,20 +54,32 @@ void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
 }
 
 /**
+ * Get the data of the job in string format.
+ * 
+ */
+char* get_job_data_as_str(int mode)
+{
+    
+}
+
+/**
  * Runs the job (gets the key-value information for each step)
  * and writes the contents to a buffer on the heap.
  *
  * @return string buffer that contains job data in key-value form.
  */
-char** run_job(Job* j)
+char** run_job(Job* )
 {
+    // initialize the buffer
+    DynamicJobBuffer* b;
+    init_job_buffer(b);
 
     Step* cur = j->head;
     while (cur)
     {
         key_value_pair* kvp = cur->get_kvp();
-        printf("%s:%s\n", kvp->key, kvp->value);
-        // traverse the list until end is reached
-        cur = cur->next;
+        
+        append_to_job_buffer("%s:%s\n", kvp->key, kvp->value);
+        cur = cur->next; // walk the list until end
     }
 }
