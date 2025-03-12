@@ -19,7 +19,7 @@ This is the single sysinfo value that is returned from the module. The available
 
 1. cpu_speed_hz
 
-== Install test dependencies
+== Install dependencies
 
 [source, bash]
 ----
