@@ -1,10 +1,75 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <json-c/json.h>
-#include "./job_buffer.h"
+#include <string.h>
 
 #define JSON_MODE 1
 #define KVP_MODE 2
+
+#define INITIAL_CAPACITY 16
+#define GROWTH_FACTOR 2
+
+typedef struct {
+    char *data;         // The buffer
+    ssize_t size;       // the current size of the buffer
+    ssize_t capacity;   // allocated capacity of the buffer
+} DynamicJobBuffer;
+
+/**
+ * Initialize a DynamicJobBuffer.
+ */
+DynamicJobBuffer* init_job_buffer(void)
+{
+    DynamicJobBuffer *b = malloc(sizeof(DynamicJobBuffer));
+    b->capacity = INITIAL_CAPACITY;
+    b->size = 0;
+    b->data = (char *)malloc(b->capacity);
+    if (!b->data)
+    {
+        printf("Could not increase size of backing array in job buffer\n");
+        exit(1);
+    }
+    b->data[0] = '\0';
+    return b;
+}
+
+void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
+{
+    char *new_data = (char *)realloc(b->data, new_capacity);
+    if (!new_data)
+    {
+        printf("Memory allocation failed\n");
+        exit(1);
+    }
+    b->data = new_data;
+    b-> capacity = new_capacity;
+}
+
+void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
+{
+    size_t text_len = strlen(text);
+    long int* buffer_size = (long int*)b->size;
+    if (*buffer_size + text_len + 1 > (unsigned long)b->capacity)
+    {
+        size_t new_capacity = b->capacity * GROWTH_FACTOR;
+        while (new_capacity < b->size + text_len + 1)
+        {
+            new_capacity *= GROWTH_FACTOR;
+        }
+        resize_job_buffer(b, new_capacity);
+    }
+
+    strcpy(b->data + b->size, text);
+    b->size += text_len;
+}
+
+void free_job_buffer(DynamicJobBuffer *b)
+{
+    free(b->data);
+    b->data = NULL;
+    b->size = 0;
+    b-> capacity = 0;
+}
 
 // return type for a step function
 typedef struct key_value_pair {
@@ -77,10 +142,14 @@ void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
  */
 char* run_job(Job* j)
 {
+    if (j->head->next == NULL)
+    {
+        return NULL;
+    }
     DynamicJobBuffer* target_buf = init_job_buffer();
     
     struct json_object *root = json_object_new_object();
-    Step *cur = j->head;
+    Step *cur = j->head->next;
     while (cur)
     {
         key_value_pair* cur_kvp = cur->get_kvp();
