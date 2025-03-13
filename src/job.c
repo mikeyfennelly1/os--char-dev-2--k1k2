@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <json-c/json.h>
 #include <string.h>
-#include <stdbool.h>
 
 #define INITIAL_CAPACITY 16
 #define GROWTH_FACTOR 2
@@ -183,22 +182,34 @@ void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void))
  */
 char* run_job(Job* j)
 {
-    if (j->head->next == NULL)
+    if (j == NULL)
     {
         return NULL;
     }
-    DynamicJobBuffer* target_buf = init_job_buffer();
-    
+
     struct json_object *root = json_object_new_object();
-    Step *cur = j->head->next;
-    while (cur)
+
+    Step* cur = j->head;
+    if (cur->next == NULL)
     {
-        key_value_pair cur_kvp = cur->get_kvp();
-        json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
-        cur = cur->next;
+        printf("cur->next == NULL\n\n\n\nn\n");
+        DynamicJobBuffer* target_buf = init_job_buffer();
+        printf("target_buf GOT\n\n\n\nn\n");
+        append_to_job_buffer(target_buf, json_object_to_json_string_ext(root,  0));
+        printf("append_to_job_buffer\n\n\n\nn\n");
+        return target_buf->data;
+    }
+    else
+    {
+        while (cur->next)
+        {
+            key_value_pair cur_kvp = cur->get_kvp();
+            json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
+            cur = (cur->next);
+        }
     }
 
-    append_to_job_buffer(target_buf, json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY));
-
+    DynamicJobBuffer* target_buf = init_job_buffer();
+    append_to_job_buffer(target_buf, json_object_to_json_string_ext(root,  0));
     return target_buf->data;
 }

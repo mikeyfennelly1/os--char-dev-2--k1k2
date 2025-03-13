@@ -1,10 +1,21 @@
 #include <CUnit/CUnit.h>
 #include <CUnit/Basic.h>
 #include "../src/job.h"
+#include <stdio.h>
+#include "./test_dynamic_job_buffer.h"
 
 #define TEST_KEY "test_key"
 #define TEST_VALUE "test_value"
 #define TEST_JOB_TITLE "test_job_title"
+
+void test_init_job_buffer(void)
+{
+    DynamicJobBuffer* b = init_job_buffer();
+    CU_ASSERT_PTR_NOT_NULL(b);
+    CU_ASSERT_EQUAL(b->capacity, INITIAL_CAPACITY);
+    CU_ASSERT_EQUAL(b->size, 0);
+    CU_ASSERT_EQUAL(b->data[0], '\0');
+}
 
 key_value_pair return_kvp(void)
 {
@@ -36,6 +47,26 @@ void test_job_init(void)
   CU_ASSERT_EQUAL(TEST_VALUE, my_job->head->get_kvp().value);
 }
 
+/**
+ * Test if job_init returns a job with the pointer
+ * job->head is NULL
+ */
+void test_if_job_head_is_not_null(void)
+{
+    Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
+    CU_ASSERT_PTR_NOT_NULL(my_job->head);
+}
+
+/**
+ * Tests if after job_init, the job->head->get_kvp
+ * pointer is not null.
+ */
+void test_job_head_get_kvp_is_non_null_pointer(void)
+{
+    Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
+    CU_ASSERT_PTR_NOT_NULL(my_job->head->get_kvp);
+}
+
 void test_append_step_to_job(void)
 {
     Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
@@ -58,6 +89,17 @@ void test_append_step_to_job(void)
     }
 }
 
+void test_run_job_json()
+{
+    Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
+
+    char* expected = "{test_key:test_value}";
+    char* actual = run_job(my_job);
+
+    printf("\n\n\n%s\n\n\n", actual);
+
+    CU_ASSERT_EQUAL(expected, actual);
+}
 
 int main(void)
 {
@@ -75,6 +117,12 @@ int main(void)
         return CU_get_error();
     }
     
+    if (!CU_add_test(suite, "test_init_job_buffer", test_init_job_buffer))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
     if (!CU_add_test(suite, "test_return_kvp", test_return_kvp))
     {
         CU_cleanup_registry();
@@ -98,7 +146,19 @@ int main(void)
         CU_cleanup_registry();
         return CU_get_error();
     }
-    
+
+    if (!CU_add_test(suite, "test_if_job_head_is_not_null", test_if_job_head_is_not_null))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    if (!CU_add_test(suite, "test_job_head_get_kvp_is_non_null_pointer", test_job_head_get_kvp_is_non_null_pointer))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
     CU_cleanup_registry();
