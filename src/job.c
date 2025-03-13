@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <json-c/json.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define JSON_MODE 1
 #define KVP_MODE 2
@@ -98,6 +99,29 @@ typedef struct Job {
     Step* head;
 } Job;
 
+Job* job_init(char* title, GetKVPFuncPtr first_step_func)
+{
+    Job* job = (Job*)malloc(sizeof(Job));
+    if (job == NULL)
+    {
+        printf("Could not allocate space for new job '%s'\n", title);
+        exit(1);
+    }
+
+    job->job_title = strdup(title);
+
+    Step* first_step = (Step*)malloc(sizeof(Step));
+
+    // set values of the first Step of job
+    first_step->get_kvp = first_step_func;
+    // first step points to a next step of NULL
+    first_step->next = NULL;
+
+    // set head of the job to point to first step pointer
+    job->head=first_step;
+    return job;
+}
+
 /**
  * Add a step to the job.
  * 
@@ -107,28 +131,49 @@ typedef struct Job {
  */
 void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
 {
-    // create Step object
-    Step* new_step_ptr = (Step*)malloc(sizeof(Step));
-    new_step_ptr->get_kvp = get_kvp_func;
-    new_step_ptr->next = NULL;
-
-    // if job has no steps, make new node the head
-    if (job->head == NULL)
+    if (job == NULL)
     {
-        job->head = new_step_ptr;
+        printf("Job pointer passed is null\n");
         return;
     }
-    else
+    
+    // create Step object
+    Step* new_step_ptr = (Step*)malloc(sizeof(Step));
+    if (new_step_ptr == NULL)
     {
-        Step* last = job->head;
-        while (last->next)
-        {
-            // traverse the list until end is reached
-            last = last->next;
-        }
-        // add point first item in list to new_step
-        last->next = new_step_ptr;
+        printf("Could not allocate memory for new step");
+        return;
     }
+    
+    new_step_ptr->get_kvp = get_kvp_func;
+    new_step_ptr->next = NULL;
+    
+    if (job->head == NULL)
+    {
+        printf("job->head == NULL\n");
+        printf("job->head == %s\n", job->head->get_kvp()->key);
+    } 
+    else if (job->head != NULL)
+    {
+        printf("job->head != NULL\n\n\n\n");
+    }
+    Step *cur = job->head;
+    while (cur)
+    {
+        // move along the list while the current item is non-null
+        if (cur->next != NULL)
+        {
+            cur = cur->next;
+        } 
+        else
+        {
+            goto assignment;
+        }
+    }
+
+    // add point first item in list to new_step
+assignment:
+    cur->next = new_step_ptr;
 
     return;
 }

@@ -32,6 +32,8 @@ typedef struct Job {
     Step* head;
 } Job;
 
+Job* job_init(const char* job_title);
+
 /**
  * Add a step to the job.
  * 
