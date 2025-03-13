@@ -4,9 +4,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define JSON_MODE 1
-#define KVP_MODE 2
-
 #define INITIAL_CAPACITY 16
 #define GROWTH_FACTOR 2
 
@@ -78,17 +75,21 @@ typedef struct key_value_pair {
     char* value;
 } key_value_pair;
 
-typedef key_value_pair* (*GetKVPFuncPtr)(void);
-
+/**
+ * The smallest unit of a Job.
+ * Consists of a get_kvp function pointer and a pointer to the
+ * next Step in the Job.
+ */
 typedef struct Step {
     // function to run the step
-    GetKVPFuncPtr get_kvp;
+    key_value_pair (*get_kvp)(void);
+
+    // pointer to the next step in the job
     struct Step* next;
 } Step;
 
 /**
- * A job is a sequence of functions that get system information
- * in key_value_pair format
+ * A Job is composed of a title and a list steps.
  */
 typedef struct Job {
     // title for the job
@@ -99,26 +100,47 @@ typedef struct Job {
     Step* head;
 } Job;
 
-Job* job_init(char* title, GetKVPFuncPtr first_step_func)
+/**
+ * Initialize a step with Step.next==NULL
+ * @param get_kvp the get_kvp function to initialize the step.
+ * @return pointer to the initialized step.
+ */
+Step* step_init(key_value_pair (*get_kvp)(void))
 {
+    Step* step;
+    step = (Step*) malloc(sizeof(Step));
+    step->next = NULL;
+    step->get_kvp = get_kvp;
+    return step;
+}
+
+/**
+ * Initialize a job, by title and first function
+ * to run in the job.
+ *
+ * @param title The title of the Job to initialize.
+ * @param head_func the function for the first step in the Job.
+ * @return a pointer to the initialized Job.
+ */
+Job* job_init(char* title, key_value_pair (*head_func)(void))
+{
+    // malloc new Job.
     Job* job = (Job*)malloc(sizeof(Job));
+    // if failure in malloc, exit.
     if (job == NULL)
     {
         printf("Could not allocate space for new job '%s'\n", title);
         exit(1);
     }
 
+    // set title of job.
     job->job_title = strdup(title);
 
-    Step* first_step = (Step*)malloc(sizeof(Step));
+    // initialize step for head_step of job.
+    Step* head_step = step_init(head_func);
 
-    // set values of the first Step of job
-    first_step->get_kvp = first_step_func;
-    // first step points to a next step of NULL
-    first_step->next = NULL;
-
-    // set head of the job to point to first step pointer
-    job->head=first_step;
+    // set job.head to head_step.
+    job->head=head_step;
     return job;
 }
 
@@ -127,9 +149,8 @@ Job* job_init(char* title, GetKVPFuncPtr first_step_func)
  * 
  * @arg job - the job to add the function pointer to.
  * @arg get_kvp_func - The pointer to the GetKVPFuncPtr
- * 
  */
-void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
+void add_step_to_job(Job* job, *key_value_pair (*get_kvp_func)(void))
 {
     if (job == NULL)
     {
@@ -161,18 +182,10 @@ void add_step_to_job(Job* job, GetKVPFuncPtr get_kvp_func)
     while (cur)
     {
         // move along the list while the current item is non-null
-        if (cur->next != NULL)
-        {
-            cur = cur->next;
-        } 
-        else
-        {
-            goto assignment;
-        }
+        cur = cur->next;
     }
 
     // add point first item in list to new_step
-assignment:
     cur->next = new_step_ptr;
 
     return;
