@@ -109,12 +109,8 @@ void test_append_step_to_job(void)
 void test_run_job_json()
 {
     Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
-
     char* expected = "{test_key:test_value}";
     char* actual = run_job(my_job);
-
-    printf("\n\n\n%s\n\n\n", actual);
-
     CU_ASSERT_EQUAL(expected, actual);
 }
 
@@ -183,6 +179,12 @@ int main(void)
     }
 
     if (!CU_add_test(suite, "test_job_head_get_kvp_is_non_null_pointer", test_job_head_get_kvp_is_non_null_pointer))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    if (!CU_add_test(suite, "test_run_job_json", test_run_job_json))
     {
         CU_cleanup_registry();
         return CU_get_error();

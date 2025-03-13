@@ -194,11 +194,8 @@ char* run_job(Job* j)
     Step* cur = j->head;
     if (cur->next == NULL)
     {
-        printf("cur->next == NULL\n\n\n\nn\n");
         DynamicJobBuffer* target_buf = init_job_buffer();
-        printf("target_buf GOT\n\n\n\nn\n");
         append_to_job_buffer(target_buf, json_object_to_json_string_ext(root,  0));
-        printf("append_to_job_buffer\n\n\n\nn\n");
         return target_buf->data;
     }
     else
