@@ -1,3 +1,5 @@
 *.ko
 /.vscode
 /build
+/.idea
+
