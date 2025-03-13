@@ -3,9 +3,56 @@
 
 A job is a data structure that you can use to create sysinfo 'jobs'.
 
-== What is a job
+== What is the Job API?
 
-Basically a job is a list of 'steps', and this data structure (which is essentially a linked list) allows you to create predefined sysinfo lists, through a standard API.
+You can use the job API to create a set of sysinfo steps. It allows you to just have to worry about getting the data, and adding it to the job. The job API handles the rest (string formatting, outputting the contents etc).
+
+The *user of the job API needs to be aware of 3 data structures*.
+
+*The Job API provides 3 main data structures:*
+
+1. Job (highest level data structure)
+
+[source, c]
+----
+typedef struct Job {
+    // title for the job
+    char* job_title;
+
+    // The 'head' step is the first step to
+    // run in the job
+    Step* head;
+} Job;
+----
+
+2. Step (a component of a Job)
+
+[source, c]
+----
+typedef struct Step {
+    // see job.h for implementation if needed.
+} Step;
+----
+
+3. key_value_pair (the data structure obtained by a Step)
+
+[source, c]
+----
+typedef struct key_value_pair {
+    char* key;
+    char* value;
+} key_value_pair;
+----
+
+
+Basically, a Job is a list of Steps. This data structure provides a simple API to create a set of ordered steps to retrieve sysinfo from kernel space.
+
+Methods in the job API can be used to:
+
+1. Create Steps
+2. Create Jobs
+3. Add Steps to Jobs
+4. Run those jobs - returning a string.
 
 == How to create a job
 
@@ -15,57 +62,44 @@ Firstly, include the job header file in your module's _.c_ file.
 
 [source, c]
 ----
-#include "../job/job.h"
+#include "./job.h"
 ----
 
-=== 2. Create a blank job
+=== 2. Create the first step for the job
 
-Here is an example.
+1. Create the function that runs during this step.
 
 [source, c]
 ----
-// job to get CPU information from kernel space
-static struct Job cpu = {
-    // title of the job 
-    "cpu",
-
-    // head (aka first) step of the job
-    //
-    // Initially I don't have one, so I will leave it as NULL
-    NULL
-};
-----
-
-=== 3. Create a function that returns a key_value_pair.
-
-Each step is a pointer to a function that returns a key_value_pair struct (_see job.h_).
-
-[source, c]
-----
-static key_value_pair* get_cpu_speed_hz(void)
+key_value_pair my_sysinfo_function(void)
 {
-    // malloc the key_value_pair
-    key_value_pair* cpu_speed_step_kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
+    key_value_pair my_data;
 
-    // set the fields of the key_value_pair you just malloc'd
-    //
-    // NOTE: Yours will be retrieving data from kernel space,
-    //       I just put in some dummy data for this example.
-    cpu_speed_step_kvp->key = "cpu_speed_hz";
-    cpu_speed_step_kvp->value = "3000Hz";
+    // ... your code here ...
 
-    // return pointer to key_value_pair on heap
-    return cpu_speed_step_kvp;
-};
-----
-
-=== 4. Add the function as a 'step' via the add_step_to_job() function
-
-[source, c]
-----
-int main(void)
-{
-    add_step_to_job(&cpu, &get_cpu_speed_hz);
-    run_job(&cpu);
+    return my_data;
 }
 ----
+
+2. Create a high level function that will create your job when called.
+
+[source, c]
+----
+Job* get_my_job(void)
+{
+    // create the name for your job
+    char* my_job_title = "my_sysinfo_category";
+
+    // create the job via address of the function
+    // you want to start with
+    Job* my_job = job_init(my_job_title, &my_sysinfo_function);
+
+    // ... add some more sysinfo functions to the job ...
+    append_step_to_job(job, &my_second_function);
+    append_step_to_job(job, &my_third_function);
+    // ... etc
+    return my_job;
+}
+----
+
+And that is it, that is all you have to do to create a Job.

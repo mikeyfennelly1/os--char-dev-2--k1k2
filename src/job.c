@@ -69,7 +69,11 @@ void free_job_buffer(DynamicJobBuffer *b)
     b-> capacity = 0;
 }
 
-// return type for a step function
+/**
+ * Return type for job function in snake case.
+ * key_value_pair.key - the name of the metric (e.g. cpu_speed_hz)
+ * key_value_pair.value - the value of that metric
+ */
 typedef struct key_value_pair {
     char* key;
     char* value;
