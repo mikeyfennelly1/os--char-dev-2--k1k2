@@ -140,7 +140,7 @@ Job* job_init(char* title, key_value_pair (*head_func)(void))
         return NULL;
 
     // set title of job.
-    job->job_title = strdup(title);
+    job->job_title = title;
 
     // initialize step for head_step of job.
     Step* head_step = step_init(head_func);
