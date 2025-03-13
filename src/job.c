@@ -32,31 +32,33 @@ DynamicJobBuffer* init_job_buffer(void)
 
 void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
 {
-    char *new_data = (char *)realloc(b->data, new_capacity);
+    char *new_data = realloc(b->data, new_capacity);
     if (!new_data)
     {
         printf("Memory allocation failed\n");
         exit(1);
     }
     b->data = new_data;
-    b-> capacity = new_capacity;
+    b->capacity = new_capacity;
 }
 
 void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
 {
     size_t text_len = strlen(text);
-    long int* buffer_size = (long int*)b->size;
-    if (*buffer_size + text_len + 1 > (unsigned long)b->capacity)
+
+    if (b->size + text_len + 1 > b->capacity)
     {
+        size_t required_capacity = b->size + text_len + 1;
         size_t new_capacity = b->capacity * GROWTH_FACTOR;
-        while (new_capacity < b->size + text_len + 1)
+        while (new_capacity < required_capacity)
         {
             new_capacity *= GROWTH_FACTOR;
         }
         resize_job_buffer(b, new_capacity);
     }
 
-    strcpy(b->data + b->size, text);
+    memcpy(b->data + b->size, text, text_len);
+    b->data[b->size + text_len] = '\0';
     b->size += text_len;
 }
 

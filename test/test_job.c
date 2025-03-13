@@ -8,6 +8,8 @@
 #define TEST_VALUE "test_value"
 #define TEST_JOB_TITLE "test_job_title"
 
+#define TEST_TEXT "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."
+
 void test_init_job_buffer(void)
 {
     DynamicJobBuffer* b = init_job_buffer();
@@ -15,6 +17,21 @@ void test_init_job_buffer(void)
     CU_ASSERT_EQUAL(b->capacity, INITIAL_CAPACITY);
     CU_ASSERT_EQUAL(b->size, 0);
     CU_ASSERT_EQUAL(b->data[0], '\0');
+}
+
+void test_resize_job_buffer(void)
+{
+    DynamicJobBuffer* b = init_job_buffer();
+    CU_ASSERT_EQUAL(b->capacity, 16);
+    resize_job_buffer(b, 200);
+    CU_ASSERT_EQUAL(b->capacity, 200);
+}
+
+void test_append_to_job_buffer(void)
+{
+    DynamicJobBuffer* b = init_job_buffer();
+    append_to_job_buffer(b, TEST_TEXT);
+    CU_ASSERT_STRING_EQUAL(b->data, TEST_TEXT);
 }
 
 key_value_pair return_kvp(void)
@@ -118,6 +135,18 @@ int main(void)
     }
     
     if (!CU_add_test(suite, "test_init_job_buffer", test_init_job_buffer))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    if (!CU_add_test(suite, "test_resize_job_buffer", test_resize_job_buffer))
+    {
+        CU_cleanup_registry();
+        return CU_get_error();
+    }
+
+    if (!CU_add_test(suite, "test_append_to_job_buffer", test_append_to_job_buffer))
     {
         CU_cleanup_registry();
         return CU_get_error();
