@@ -56,7 +56,7 @@ Methods in the job API can be used to:
 
 == How to create a job
 
-=== 1. Include job.h
+=== 1. Include job.h.
 
 Firstly, include the job header file in your module's _.c_ file.
 
@@ -65,9 +65,7 @@ Firstly, include the job header file in your module's _.c_ file.
 #include "./job.h"
 ----
 
-=== 2. Create the first step for the job
-
-1. Create the function that runs during this step.
+=== 2. Create the first function for the job.
 
 [source, c]
 ----
@@ -81,7 +79,7 @@ key_value_pair my_sysinfo_function(void)
 }
 ----
 
-2. Create a high level function that will create your job when called.
+=== 3. Make a function to get your job.
 
 [source, c]
 ----
