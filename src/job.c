@@ -102,13 +102,17 @@ typedef struct Job {
 
 /**
  * Initialize a step with Step.next==NULL
+ *
  * @param get_kvp the get_kvp function to initialize the step.
- * @return pointer to the initialized step.
+ * @return Step* - pointer to the initialized step.
+ * @return NULL if step init failed.
  */
 Step* step_init(key_value_pair (*get_kvp)(void))
 {
     Step* step;
     step = (Step*) malloc(sizeof(Step));
+    if (step == NULL)
+        return NULL;
     step->next = NULL;
     step->get_kvp = get_kvp;
     return step;
@@ -120,24 +124,24 @@ Step* step_init(key_value_pair (*get_kvp)(void))
  *
  * @param title The title of the Job to initialize.
  * @param head_func the function for the first step in the Job.
- * @return a pointer to the initialized Job.
+ * @return a pointer to the initialized Job,
+ *         NULL if job_init failed
  */
 Job* job_init(char* title, key_value_pair (*head_func)(void))
 {
     // malloc new Job.
     Job* job = (Job*)malloc(sizeof(Job));
-    // if failure in malloc, exit.
+    // if failure in malloc return NULL.
     if (job == NULL)
-    {
-        printf("Could not allocate space for new job '%s'\n", title);
-        exit(1);
-    }
+        return NULL;
 
     // set title of job.
     job->job_title = strdup(title);
 
     // initialize step for head_step of job.
     Step* head_step = step_init(head_func);
+    if (head_step == NULL)
+        return NULL;
 
     // set job.head to head_step.
     job->head=head_step;
@@ -147,47 +151,22 @@ Job* job_init(char* title, key_value_pair (*head_func)(void))
 /**
  * Add a step to the job.
  * 
- * @arg job - the job to add the function pointer to.
- * @arg get_kvp_func - The pointer to the GetKVPFuncPtr
+ * @param job - the job to add the function pointer to.
+ * @param get_kvp_func - the function for the step to add
  */
-void add_step_to_job(Job* job, *key_value_pair (*get_kvp_func)(void))
+void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void))
 {
-    if (job == NULL)
-    {
-        printf("Job pointer passed is null\n");
-        return;
-    }
-    
-    // create Step object
-    Step* new_step_ptr = (Step*)malloc(sizeof(Step));
-    if (new_step_ptr == NULL)
-    {
-        printf("Could not allocate memory for new step");
-        return;
-    }
-    
-    new_step_ptr->get_kvp = get_kvp_func;
-    new_step_ptr->next = NULL;
-    
-    if (job->head == NULL)
-    {
-        printf("job->head == NULL\n");
-        printf("job->head == %s\n", job->head->get_kvp()->key);
-    } 
-    else if (job->head != NULL)
-    {
-        printf("job->head != NULL\n\n\n\n");
-    }
-    Step *cur = job->head;
-    while (cur)
-    {
-        // move along the list while the current item is non-null
-        cur = cur->next;
-    }
+    Job job_to_add_to;
+    job_to_add_to = *job;
 
-    // add point first item in list to new_step
-    cur->next = new_step_ptr;
+    // initialize cur as job.head
+    Step cur = (*job_to_add_to.head);
+    while (cur.next)       // until cur.next == NULL...
+        cur = (*cur.next); // ... walk the job.
 
+    // create the step to append
+    Step* p_step_to_add = step_init(get_kvp_func);
+    cur.next = p_step_to_add;
     return;
 }
 
@@ -195,7 +174,7 @@ void add_step_to_job(Job* job, *key_value_pair (*get_kvp_func)(void))
  * Runs the job (gets the key-value information for each step)
  * and writes the contents to a buffer 'target_buf'.
  *
- * @arg target_buf - the buffer the caller wants data to be written to.
+ * @param j - pointer to the job to run.
  * @return string buffer that contains job data in key-value form.
  */
 char* run_job(Job* j)
@@ -210,8 +189,8 @@ char* run_job(Job* j)
     Step *cur = j->head->next;
     while (cur)
     {
-        key_value_pair* cur_kvp = cur->get_kvp();
-        json_object_object_add(root, cur_kvp->key, json_object_new_string(cur_kvp->value));
+        key_value_pair cur_kvp = cur->get_kvp();
+        json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
         cur = cur->next;
     }
 
