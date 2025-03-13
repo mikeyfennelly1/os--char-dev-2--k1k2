@@ -1,0 +1,23 @@
+= router
+
+This module controls user facing functions of the device such as:
+
+1. The active job
+2. The output location  
+
+== The router API
+
+=== Change the standard output to /proc
+
+[source, c]
+----
+#include "controller.h"
+
+int main()
+{
+    if (router(PROC) < 0)
+    {
+        printf("Failed to redirect output to /proc file\n");
+    }
+}
+----

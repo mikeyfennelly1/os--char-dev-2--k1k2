@@ -18,3 +18,11 @@ Change the current_info_type returned from the module.
 This is the single sysinfo value that is returned from the module. The available sysinfo types are:
 
 1. cpu_speed_hz
+
+== Install dependencies
+
+[source, bash]
+----
+sudo make install
+----
+
