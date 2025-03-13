@@ -109,9 +109,14 @@ void test_append_step_to_job(void)
 void test_run_job_json()
 {
     Job* my_job = job_init(TEST_JOB_TITLE, &return_kvp);
-    char* expected = "{test_key:test_value}";
     char* actual = run_job(my_job);
-    CU_ASSERT_EQUAL(expected, actual);
+    char* expected = "{\"test_key\": \"test_value\"}";
+
+    struct json_object *json1 = json_tokener_parse(actual);
+    struct json_object *json2 = json_tokener_parse(expected);
+
+    CU_ASSERT_TRUE(json_object_equal(json1, json2));
+    free(actual);
 }
 
 int main(void)

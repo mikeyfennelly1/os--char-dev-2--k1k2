@@ -181,6 +181,9 @@ void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void))
  *
  * @param j - pointer to the job to run.
  * @return string buffer that contains job data in key-value form.
+ *
+ * WARNING: It is the responsibility of the caller to free
+ * the memory of the returned buffer.
  */
 char* run_job(Job* j)
 {
@@ -192,23 +195,18 @@ char* run_job(Job* j)
     struct json_object *root = json_object_new_object();
 
     Step* cur = j->head;
-    if (cur->next == NULL)
+    while (cur != NULL)
     {
-        DynamicJobBuffer* target_buf = init_job_buffer();
-        append_to_job_buffer(target_buf, json_object_to_json_string_ext(root,  0));
-        return target_buf->data;
-    }
-    else
-    {
-        while (cur->next)
-        {
-            key_value_pair cur_kvp = cur->get_kvp();
-            json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
-            cur = (cur->next);
-        }
+        key_value_pair cur_kvp = cur->get_kvp();
+        json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
+        cur = cur->next;
     }
 
     DynamicJobBuffer* target_buf = init_job_buffer();
-    append_to_job_buffer(target_buf, json_object_to_json_string_ext(root,  0));
+    append_to_job_buffer(target_buf, json_object_to_json_string_ext(root, 0));
+
+    // Clean up the JSON object after converting it to a string
+    json_object_put(root);  // This frees the JSON object memory
+
     return target_buf->data;
 }
