@@ -1,6 +1,9 @@
-#include <stdint.h>
+#ifndef CPU_H
+#define CPU_H
 
-/**
- * @brief get cpu clock speed in Hz
- */
-unsigned int get_cpu_speed_hz(void);
+#include <stdint.h>
+#include "job.h"
+
+Job* get_cpu_job(void);
+
+#endif
