@@ -6,16 +6,19 @@
 #include "sysinfo_dev.h"
 #include "job.h"
 
-// proc file definitions
 #define PROC_FILE_NAME "sysinfo"
 
-/* /proc file initialisation and functions*/
 ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset);
 int append_to_proc(struct seq_file *m, void *v);
 int my_proc_open(struct inode *inode, struct file *file);
 int __init char_device_proc_init(void);
 void __exit char_device_proc_exit(void);
 
+/**
+ * Function called when userspace file reads /proc/sysinfo
+ * 
+ * @return 
+ */
 ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
 {
     Job* current_job = get_current_job();
@@ -43,6 +46,11 @@ static const struct proc_ops proc_ops = {
     .proc_open = my_proc_open,
 };
 
+/**
+ * Function to run on initialization of proc file
+ * 
+ * @return -1 if error, else 0
+ */
 int __init char_device_proc_init(void)
 {
     // Create the proc file at /proc/PROC_FILE_NAME
@@ -56,14 +64,16 @@ int __init char_device_proc_init(void)
     return 0;
 };
 
+/**
+ * Function to run on exit of end of life for /proc/sysinfo.
+ * i.e. when module is removed.
+ */
 void __exit char_device_proc_exit(void)
 {
     // Remove the proc file
     proc_remove(proc_entry);
     pr_info("/proc/%s removed\n", PROC_FILE_NAME);
 };
-
-#define PROC_FILENAME "/proc/sysinfo"
 
 int append_to_proc(struct seq_file *m, void *v)
 {
