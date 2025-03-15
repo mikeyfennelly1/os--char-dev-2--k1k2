@@ -19,27 +19,20 @@ void __exit char_device_proc_exit(void);
 ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
 {
     Job* current_job = get_current_job();
-    // Example character buffer you want to print
-    const char *buffer = "This is the content to be printed to /proc file\n";
+    const char *buffer = run_job(current_job);
 
-    // Check if offset is 0 (first read)
     if (*offset > 0)
-        return 0; // End of file has been reached
+        return 0;
 
-    // Copy the content of the buffer into the user-provided memory
     size_t len = strlen(buffer);
     if (whatever_size < len)
-        len = whatever_size;  // Ensure that the buffer fits in the requested space
+        len = whatever_size;
 
-    // Copy content into user space
     if (copy_to_user(whatever_char, buffer, len)) {
-        return -EFAULT; // Error copying to user space
+        return -EFAULT;
     }
 
-    // Update the offset to reflect that we've written the content
     *offset += len;
-
-    // Return the number of bytes read
     return len;
 };
 

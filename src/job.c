@@ -1,8 +1,62 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
+// definitions for backing array for job
 #define INITIAL_CAPACITY 16
 #define GROWTH_FACTOR 2
+
+// definitions for info types
+#define CPU 1
+#define MEMORY 2
+#define DISK 3
+
+static int current_info_type = 1;
+
+/**
+ * Get a pointer to the job for the current_info_type.
+ * 
+ * @return pointer to the job for current_info_type.
+ */
+Job* get_current_job(void)
+{
+    Job* current_job;
+    
+    switch (current_info_type)
+    {
+        case CPU:
+            current_job = get_cpu_job();
+        case MEMORY:
+            current_job = get_memory_job();
+        case DISK:
+            current_job = get_disk_job();
+        default:
+            current_job = NULL;
+    }
+    return current_job;
+}
+
+/**
+ * Set the value of the current info type to 1 of
+ * 3 values:
+ * 
+ * 1. CPU
+ * 2. MEMORY
+ * 3. DISK
+ * 
+ * @return 0 if success, -1 on error.
+ */
+int set_current_info_type(int value)
+{
+    if (value <=3 && value >=1)
+    {
+        current_info_type = value;
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
+}
 
 typedef struct {
     char *data;         // The buffer

@@ -1,6 +1,14 @@
 #ifndef JOB_H
 #define JOB_H
 
+// definitions for info types
+#define CPU 1
+#define MEMORY 2
+#define DISK 3
+
+Job* get_current_job(void);
+int set_current_info_type(int value);
+
 /**
  * Return type for job function in snake case.
  * key_value_pair.key - the name of the metric (e.g. cpu_speed_hz)
