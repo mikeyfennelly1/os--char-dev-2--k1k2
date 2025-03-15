@@ -1,8 +1,11 @@
 = Sysinfo LKM
+:toc:
 
-This LKM gets system information from kernel space.
+This is a character device gets system information from kernel space, and returns it as a byte stream of JSON.
 
-== How to use
+There is a userspace application that is a demo of this. link:https://github.com/mikeyfennelly1/os--char-dev-2--u1[Here is that repo].
+
+== Usage
 
 === read()
 
@@ -17,12 +20,29 @@ Change the current_info_type returned from the module.
 
 This is the single sysinfo value that is returned from the module. The available sysinfo types are:
 
-1. cpu_speed_hz
+1. cpu
+2. disk
+3. memory
 
-== Install dependencies
+== Install
+
+Clone this repo.
+
+[source, bash]
+----
+git clone git@github.com:mikeyfennelly1/os--char-dev-2--k1k2.git
+----
+
+Install dependencies.
 
 [source, bash]
 ----
 sudo make install
 ----
 
+Build the kernel object.
+
+[source, bash]
+----
+make
+----

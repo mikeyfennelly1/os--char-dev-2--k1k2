@@ -6,9 +6,7 @@
  * @author Mikey Fennelly
  */
 
-#include <stdint.h>
-#include <cpu.h>
-
+#include "job.h"
 
 /**
  * Get's speed of the host CPU in Hz
@@ -17,7 +15,8 @@
  *
  * @brief gets CPU speed in Hz.
  */
-unsigned int get_cpu_speed_hz(void)
+
+Job* get_cpu_job(void)
 {
-    return cpu_data(0).cpu_khz * 1000;
+    return NULL;
 }

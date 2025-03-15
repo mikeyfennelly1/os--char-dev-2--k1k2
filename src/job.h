@@ -1,9 +1,29 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <json-c/json.h>
+// definitions for info types
+#define CPU 1
+#define MEMORY 2
+#define DISK 3
+
+/**
+ * Get a pointer to the job for the current_info_type.
+ * 
+ * @return pointer to the job for current_info_type.
+ */
+Job* get_current_job(void);
+
+/**
+ * Set the value of the current info type to 1 of
+ * 3 values:
+ * 
+ * 1. CPU
+ * 2. MEMORY
+ * 3. DISK
+ * 
+ * @return 0 if success, -1 on error.
+ */
+int set_current_info_type(int value);
 
 /**
  * Return type for job function in snake case.
