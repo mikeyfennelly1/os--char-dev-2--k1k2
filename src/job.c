@@ -1,7 +1,5 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <json-c/json.h>
-#include <string.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
 
 #define INITIAL_CAPACITY 16
 #define GROWTH_FACTOR 2
@@ -11,64 +9,6 @@ typedef struct {
     ssize_t size;       // the current size of the buffer
     ssize_t capacity;   // allocated capacity of the buffer
 } DynamicJobBuffer;
-
-/**
- * Initialize a DynamicJobBuffer.
- */
-DynamicJobBuffer* init_job_buffer(void)
-{
-    DynamicJobBuffer *b = malloc(sizeof(DynamicJobBuffer));
-    b->capacity = INITIAL_CAPACITY;
-    b->size = 0;
-    b->data = (char *)malloc(b->capacity);
-    if (!b->data)
-    {
-        printf("Could not increase size of backing array in job buffer\n");
-        exit(1);
-    }
-    b->data[0] = '\0';
-    return b;
-}
-
-void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
-{
-    char *new_data = realloc(b->data, new_capacity);
-    if (!new_data)
-    {
-        printf("Memory allocation failed\n");
-        exit(1);
-    }
-    b->data = new_data;
-    b->capacity = new_capacity;
-}
-
-void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
-{
-    size_t text_len = strlen(text);
-
-    if (b->size + text_len + 1 > b->capacity)
-    {
-        size_t required_capacity = b->size + text_len + 1;
-        size_t new_capacity = b->capacity * GROWTH_FACTOR;
-        while (new_capacity < required_capacity)
-        {
-            new_capacity *= GROWTH_FACTOR;
-        }
-        resize_job_buffer(b, new_capacity);
-    }
-
-    memcpy(b->data + b->size, text, text_len);
-    b->data[b->size + text_len] = '\0';
-    b->size += text_len;
-}
-
-void free_job_buffer(DynamicJobBuffer *b)
-{
-    free(b->data);
-    b->data = NULL;
-    b->size = 0;
-    b-> capacity = 0;
-}
 
 /**
  * Return type for job function in snake case.
@@ -105,6 +45,73 @@ typedef struct Job {
     Step* head;
 } Job;
 
+DynamicJobBuffer* init_job_buffer(void);
+void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity);
+void append_to_job_buffer(DynamicJobBuffer *b, const char* text);
+void free_job_buffer(DynamicJobBuffer *b);
+Step* step_init(key_value_pair (*get_kvp)(void));
+Job* job_init(char* title, key_value_pair (*head_func)(void));
+void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void));
+char* run_job(Job* j);
+
+/**
+ * Initialize a DynamicJobBuffer.
+ */
+DynamicJobBuffer* init_job_buffer(void)
+{
+    DynamicJobBuffer *b = kmalloc(sizeof(DynamicJobBuffer), GFP_KERNEL);
+    b->capacity = INITIAL_CAPACITY;
+    b->size = 0;
+    b->data = (char *)kmalloc(b->capacity, GFP_KERNEL);
+    if (!b->data)
+    {
+        pr_err("Could not increase size of backing array in job buffer\n");
+        return NULL;
+    }
+    b->data[0] = '\0';
+    return b;
+}
+
+void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
+{
+    char *new_data = krealloc(b->data, new_capacity, GFP_KERNEL);
+    if (!new_data)
+    {
+        pr_err("Memory allocation failed resizing job buffer\n");
+        return;
+    }
+    b->data = new_data;
+    b->capacity = new_capacity;
+}
+
+void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
+{
+    size_t text_len = strlen(text);
+
+    if (b->size + text_len + 1 > b->capacity)
+    {
+        size_t required_capacity = b->size + text_len + 1;
+        size_t new_capacity = b->capacity * GROWTH_FACTOR;
+        while (new_capacity < required_capacity)
+        {
+            new_capacity *= GROWTH_FACTOR;
+        }
+        resize_job_buffer(b, new_capacity);
+    }
+
+    memcpy(b->data + b->size, text, text_len);
+    b->data[b->size + text_len] = '\0';
+    b->size += text_len;
+}
+
+void free_job_buffer(DynamicJobBuffer *b)
+{
+    kfree(b->data);
+    b->data = NULL;
+    b->size = 0;
+    b-> capacity = 0;
+}
+
 /**
  * Initialize a step with Step.next==NULL
  *
@@ -115,7 +122,7 @@ typedef struct Job {
 Step* step_init(key_value_pair (*get_kvp)(void))
 {
     Step* step;
-    step = (Step*) malloc(sizeof(Step));
+    step = (Step*) kmalloc(sizeof(Step), GFP_KERNEL);
     if (step == NULL)
         return NULL;
     step->next = NULL;
@@ -134,9 +141,9 @@ Step* step_init(key_value_pair (*get_kvp)(void))
  */
 Job* job_init(char* title, key_value_pair (*head_func)(void))
 {
-    // malloc new Job.
-    Job* job = (Job*)malloc(sizeof(Job));
-    // if failure in malloc return NULL.
+    // kmalloc new Job.
+    Job* job = (Job*)kmalloc(sizeof(Job), GFP_KERNEL);
+    // if failure in kmalloc return NULL.
     if (job == NULL)
         return NULL;
 
@@ -192,21 +199,19 @@ char* run_job(Job* j)
         return NULL;
     }
 
-    struct json_object *root = json_object_new_object();
+    DynamicJobBuffer* target_buf = init_job_buffer();
 
     Step* cur = j->head;
     while (cur != NULL)
     {
         key_value_pair cur_kvp = cur->get_kvp();
-        json_object_object_add(root, cur_kvp.key, json_object_new_string(cur_kvp.value));
+        char this_kvp_buf[40];
+        sprintf(this_kvp_buf, "%s, %s\n", cur_kvp.key, cur_kvp.value);
+        append_to_job_buffer(target_buf, this_kvp_buf);
         cur = cur->next;
     }
 
-    DynamicJobBuffer* target_buf = init_job_buffer();
-    append_to_job_buffer(target_buf, json_object_to_json_string_ext(root, 0));
-
-    // Clean up the JSON object after converting it to a string
-    json_object_put(root);  // This frees the JSON object memory
-
     return target_buf->data;
 }
+
+MODULE_LICENSE("GPL");

@@ -1,10 +1,6 @@
 #ifndef JOB_H
 #define JOB_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <json-c/json.h>
-
 /**
  * Return type for job function in snake case.
  * key_value_pair.key - the name of the metric (e.g. cpu_speed_hz)

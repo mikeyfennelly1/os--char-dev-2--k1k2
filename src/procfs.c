@@ -1,14 +1,19 @@
 #include <linux/proc_fs.h>
-#include <linux/seq_file.h>
 #include <linux/module.h>
+#include <linux/seq_file.h>
 #include <linux/kernel.h>
 
 // proc file definitions
 #define PROC_FILE_NAME "sysinfo"
 
 /* /proc file initialisation and functions*/
+ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset);
+int append_to_proc(struct seq_file *m, void *v);
+int my_proc_open(struct inode *inode, struct file *file);
+int __init char_device_proc_init(void);
+void __exit char_device_proc_exit(void);
 
-static ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
+ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
 {
     printk("proc file read\n");
     return 0;
@@ -18,9 +23,10 @@ struct proc_dir_entry *proc_entry;
 
 static const struct proc_ops proc_ops = {
     .proc_read = sysinfo_proc_read,
+    .proc_open = my_proc_open,
 };
 
-static int __init char_device_proc_init(void)
+int __init char_device_proc_init(void)
 {
     // Create the proc file at /proc/PROC_FILE_NAME
     proc_entry = proc_create(PROC_FILE_NAME, 0666, NULL, &proc_ops);
@@ -33,7 +39,7 @@ static int __init char_device_proc_init(void)
     return 0;
 };
 
-static void __exit char_device_proc_exit(void)
+void __exit char_device_proc_exit(void)
 {
     // Remove the proc file
     proc_remove(proc_entry);
@@ -44,12 +50,14 @@ static void __exit char_device_proc_exit(void)
 
 int append_to_proc(struct seq_file *m, void *v)
 {
-    seq_printf(m, "initial content"\n);
+    seq_printf(m, "initial content\n");
     seq_printf(m, "more data\n");
     return 0;
 };
 
-static int my_proc_open(struct inode *inode, struct file *file)
+int my_proc_open(struct inode *inode, struct file *file)
 {
-    return single_open(file, my_proc_show, NULL);
+    return single_open(file, append_to_proc, NULL);
 }
+
+MODULE_LICENSE("GPL");

@@ -1,15 +1,15 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/init.h>
-#include <linux/file.h>
 #include <linux/uaccess.h>
 #include <linux/fs.h>
-#include <linux/kernel.h>
 #include <linux/cdev.h>
+#include <linux/init.h>
+#include <linux/file.h>
+#include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/version.h>
 
-#include "./procfs/procfs.h"
+#include "./procfs.h"
 
 // ioctl definitions
 #define MY_IOCTL_MAGIC 'M'
@@ -24,6 +24,10 @@
 static dev_t dev_num;
 static struct cdev sysinfo_cdev;
 static struct class *sysinfo_dev_class;
+
+int __init sysinfo_cdev_init(void);
+void __exit sysinfo_cdev_exit(void);
+
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
@@ -66,8 +70,8 @@ static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg
             return -EINVAL;
     }
 
-    return 0;
-}
+    return value;
+};
 
 // file operations for interacting with the device
 static struct file_operations fops = {
@@ -84,7 +88,7 @@ static struct file_operations fops = {
  * filesystem for this device. This was done so that the
  * /proc filesystem could be created on module load.
  */
-static int __init sysinfo_cdev_init(void)
+int __init sysinfo_cdev_init(void)
 {
     int ret;
     
@@ -128,14 +132,17 @@ static int __init sysinfo_cdev_init(void)
         return -1;
     }
 
+    // create the /proc fs on module init
+    char_device_proc_init();
+
     printk(KERN_INFO "Sysinfo char dev initialized\n");
     return 0;
 };
 
-static void __exit sysinfo_cdev_exit(void)
+void __exit sysinfo_cdev_exit(void)
 {
     // remove the device from the kernel
-    static int major;
+    int major;
     major = MAJOR(dev_num);
     device_destroy(sysinfo_dev_class, MKDEV(major, 0)); // destroy device
     class_destroy(sysinfo_dev_class); // destroy device class
@@ -145,4 +152,16 @@ static void __exit sysinfo_cdev_exit(void)
     char_device_proc_exit();
     
     printk(KERN_INFO "Module unloaded\n");
-};
+    return;
+}
+
+// register the init function for the device
+module_init(sysinfo_cdev_init);
+// register the exit function for the device
+module_exit(sysinfo_cdev_exit);
+
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Sarah McDonagh");
+MODULE_AUTHOR("Danny Quinn");
+MODULE_AUTHOR("Mikey Fennelly");
+MODULE_DESCRIPTION("Sysinfo kernel module");

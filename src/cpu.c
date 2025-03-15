@@ -6,7 +6,6 @@
  * @author Mikey Fennelly
  */
 
-#include <stdint.h>
 #include <cpu.h>
 
 
@@ -17,7 +16,3 @@
  *
  * @brief gets CPU speed in Hz.
  */
-unsigned int get_cpu_speed_hz(void)
-{
-    return cpu_data(0).cpu_khz * 1000;
-}
