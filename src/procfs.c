@@ -75,6 +75,7 @@ void __exit char_device_proc_exit(void)
     pr_info("/proc/%s removed\n", PROC_FILE_NAME);
 };
 
+
 int append_to_proc(struct seq_file *m, void *v)
 {
     seq_printf(m, "initial content\n");
