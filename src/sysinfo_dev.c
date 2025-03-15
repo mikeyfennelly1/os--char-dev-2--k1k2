@@ -28,7 +28,6 @@ static struct class *sysinfo_dev_class;
 int __init sysinfo_cdev_init(void);
 void __exit sysinfo_cdev_exit(void);
 
-
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
     printk(KERN_INFO "Device %s opened\n", DEVICE_NAME);
