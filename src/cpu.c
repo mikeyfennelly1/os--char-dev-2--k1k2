@@ -16,3 +16,6 @@
  *
  * @brief gets CPU speed in Hz.
  */
+
+
+Job* 
