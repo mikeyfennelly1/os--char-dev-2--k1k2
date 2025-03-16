@@ -40,6 +40,27 @@ static int sysinfo_release(struct inode *inode, struct file *filep)
     return 0;
 }
 
+#define MESSAGE "hello from read function\n"
+#define MESSAGE_LEN (sizeof(MESSAGE) - 1)
+
+ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos)
+{
+    ssize_t bytes_to_copy, bytes_copied;
+
+    if (*f_pos >= MESSAGE_LEN)
+    return 0;
+
+    bytes_to_copy = min(count, (size_t)(MESSAGE_LEN - *f_pos));
+
+    bytes_copied = copy_to_user(user_buffer, MESSAGE + *f_pos, bytes_to_copy);
+    if (bytes_copied)
+        return -EFAULT;
+
+    *f_pos += bytes_to_copy;
+
+    return bytes_to_copy;
+}
+
 static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     int value;
@@ -82,7 +103,8 @@ static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = sysinfo_open,
     .release = sysinfo_release,
-    .unlocked_ioctl = sysinfo_ioctl
+    .unlocked_ioctl = sysinfo_ioctl,
+    .read = sysinfo_read
 };
 
 /**
