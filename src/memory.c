@@ -1,93 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/sysinfo.h>
-#include "../job/job.h"
+#include <linux/kernel.h>
+#include <linux/slab.h>
+#include "job.h"
 
-
-
-// Job to get memory information from kernel space
-static struct Job memory = {
-    
-    "memory",
-
-    NULL
-};
-
-// Create a function that returns a key_value_pair.
-
-static key_value_pair* get_total_ram(void)
+static key_value_pair get_total_ram(void)
 {
-    key_value_pair* kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
-    struct sysinfo sys_info;
-    if (sysinfo(&sys_info) != 0) {
-        perror("sysinfo");
-        exit(EXIT_FAILURE);
-    }
-    kvp->key = "total_ram";
-    asprintf(&kvp->value, "%ld", sys_info.totalram);
-    return kvp;
+    key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);
+    kvp->key = "dummy_key";
+    kvp->value = "dummy_value";
+    return *kvp;
 }
 
-static key_value_pair* get_free_ram(void)
+static key_value_pair get_free_ram(void)
 {
-    key_value_pair* kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
-    struct sysinfo sys_info;
-    if (sysinfo(&sys_info) != 0) {
-        perror("sysinfo");
-        exit(EXIT_FAILURE);
-    }
-    kvp->key = "free_ram";
-    asprintf(&kvp->value, "%ld", sys_info.freeram);
-    return kvp;
+    key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);
+    kvp->key = "dummy_key";
+    kvp->value = "dummy_value";
+    return *kvp;
 }
 
-static key_value_pair* get_buffer_ram(void)
+static key_value_pair get_buffer_ram(void)
 {
-    key_value_pair* kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
-    struct sysinfo sys_info;
-    if (sysinfo(&sys_info) != 0) {
-        perror("sysinfo");
-        exit(EXIT_FAILURE);
-    }
-    kvp->key = "buffer_ram";
-    asprintf(&kvp->value, "%ld", sys_info.bufferram);
-    return kvp;
+    key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);
+    kvp->key = "dummy_key";
+    kvp->value = "dummy_value";
+    return *kvp;
 }
 
-static key_value_pair* get_total_swap(void)
+static key_value_pair get_total_swap(void)
 {
-    key_value_pair* kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
-    struct sysinfo sys_info;
-    if (sysinfo(&sys_info) != 0) {
-        perror("sysinfo");
-        exit(EXIT_FAILURE);
-    }
-    kvp->key = "total_swap";
-    asprintf(&kvp->value, "%ld", sys_info.totalswap);
-    return kvp;
+    key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);
+    kvp->key = "dummy_key";
+    kvp->value = "dummy_value";
+    return *kvp;
 }
 
-static key_value_pair* get_free_swap(void)
+static key_value_pair get_free_swap(void)
 {
-    key_value_pair* kvp = (key_value_pair *) malloc(sizeof(key_value_pair));
-    struct sysinfo sys_info;
-    if (sysinfo(&sys_info) != 0) {
-        perror("sysinfo");
-        exit(EXIT_FAILURE);
-    }
-    kvp->key = "free_swap";
-    asprintf(&kvp->value, "%ld", sys_info.freeswap);
-    return kvp;
+    key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);
+    kvp->key = "dummy_key";
+    kvp->value = "dummy_value";
+    return *kvp;
 }
 
-
-int main(void)
+Job* get_memory_job(void)
 {
-    add_step_to_job(&memory, &get_total_ram);
-    add_step_to_job(&memory, &get_free_ram);
-    add_step_to_job(&memory, &get_buffer_ram);
-    add_step_to_job(&memory, &get_total_swap);
-    add_step_to_job(&memory, &get_free_swap);
-    run_job(&memory);
-    return 0;
+    Job* memory = job_init("memory", get_total_ram);
+    append_step_to_job(memory, get_free_ram);
+    append_step_to_job(memory, get_total_swap);
+    append_step_to_job(memory, get_buffer_ram);
+    append_step_to_job(memory, get_free_swap);
+    return memory;
 }

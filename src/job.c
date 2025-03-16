@@ -1,5 +1,8 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
+#include "cpu.h"
+#include "memory.h"
+#include "disk.h"
 
 // definitions for backing array for job
 #define INITIAL_CAPACITY 16
@@ -12,101 +15,17 @@
 
 static int current_info_type = 1;
 
-/**
- * Get a pointer to the job for the current_info_type.
- * 
- * @return pointer to the job for current_info_type.
- */
-Job* get_current_job(void)
-{
-    Job* current_job;
-    
-    switch (current_info_type)
-    {
-        case CPU:
-            current_job = get_cpu_job();
-        case MEMORY:
-            current_job = get_memory_job();
-        case DISK:
-            current_job = get_disk_job();
-        default:
-            current_job = NULL;
-    }
-    return current_job;
-}
-
-/**
- * Set the value of the current info type to 1 of
- * 3 values:
- * 
- * 1. CPU
- * 2. MEMORY
- * 3. DISK
- * 
- * @return 0 if success, -1 on error.
- */
-int set_current_info_type(int value)
-{
-    if (value <=3 && value >=1)
-    {
-        current_info_type = value;
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
-}
-
 typedef struct {
     char *data;         // The buffer
     ssize_t size;       // the current size of the buffer
     ssize_t capacity;   // allocated capacity of the buffer
 } DynamicJobBuffer;
 
-/**
- * Return type for job function in snake case.
- * key_value_pair.key - the name of the metric (e.g. cpu_speed_hz)
- * key_value_pair.value - the value of that metric
- */
-typedef struct key_value_pair {
-    char* key;
-    char* value;
-} key_value_pair;
-
-/**
- * The smallest unit of a Job.
- * Consists of a get_kvp function pointer and a pointer to the
- * next Step in the Job.
- */
-typedef struct Step {
-    // function to run the step
-    key_value_pair (*get_kvp)(void);
-
-    // pointer to the next step in the job
-    struct Step* next;
-} Step;
-
-/**
- * A Job is composed of a title and a list steps.
- */
-typedef struct Job {
-    // title for the job
-    char* job_title;
-    
-    // The 'head' step is the first step to 
-    // run in the job
-    Step* head;
-} Job;
-
 DynamicJobBuffer* init_job_buffer(void);
 void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity);
 void append_to_job_buffer(DynamicJobBuffer *b, const char* text);
 void free_job_buffer(DynamicJobBuffer *b);
 Step* step_init(key_value_pair (*get_kvp)(void));
-Job* job_init(char* title, key_value_pair (*head_func)(void));
-void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void));
-char* run_job(Job* j);
 
 /**
  * Initialize a DynamicJobBuffer.
@@ -266,6 +185,52 @@ char* run_job(Job* j)
     }
 
     return target_buf->data;
+}
+
+/**
+ * Get a pointer to the job for the current_info_type.
+ * 
+ * @return pointer to the job for current_info_type.
+ */
+Job* get_current_job(void)
+{
+    Job* current_job;
+    
+    switch (current_info_type)
+    {
+        case CPU:
+            current_job = get_cpu_job();
+        case MEMORY:
+            current_job = get_memory_job();
+        case DISK:
+            current_job = get_disk_job();
+        default:
+            current_job = NULL;
+    }
+    return current_job;
+}
+
+/**
+ * Set the value of the current info type to 1 of
+ * 3 values:
+ * 
+ * 1. CPU
+ * 2. MEMORY
+ * 3. DISK
+ * 
+ * @return 0 if success, -1 on error.
+ */
+int set_current_info_type(int value)
+{
+    if (value <=3 && value >=1)
+    {
+        current_info_type = value;
+        return 0;
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 MODULE_LICENSE("GPL");

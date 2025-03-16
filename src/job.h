@@ -7,25 +7,6 @@
 #define DISK 3
 
 /**
- * Get a pointer to the job for the current_info_type.
- * 
- * @return pointer to the job for current_info_type.
- */
-Job* get_current_job(void);
-
-/**
- * Set the value of the current info type to 1 of
- * 3 values:
- * 
- * 1. CPU
- * 2. MEMORY
- * 3. DISK
- * 
- * @return 0 if success, -1 on error.
- */
-int set_current_info_type(int value);
-
-/**
  * Return type for job function in snake case.
  * key_value_pair.key - the name of the metric (e.g. cpu_speed_hz)
  * key_value_pair.value - the value of that metric
@@ -96,5 +77,25 @@ void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void));
  * @return string buffer that contains job data in key-value form.
  */
 char* run_job(Job* j);
+
+/**
+ * Get a pointer to the job for the current_info_type.
+ * 
+ * @return pointer to the job for current_info_type.
+ */
+Job* get_current_job(void);
+
+/**
+ * Set the value of the current info type to 1 of
+ * 3 values:
+ * 
+ * 1. CPU
+ * 2. MEMORY
+ * 3. DISK
+ * 
+ * @return 0 if success, -1 on error.
+ */
+int set_current_info_type(int value);
+
 
 #endif
