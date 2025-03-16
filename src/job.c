@@ -215,7 +215,7 @@ char* run_job(Job* j)
         append_to_job_buffer(target_buf, tmp_buf);
         cur = cur->next;
     }
-    append_to_job_buffer(target_buf, "}");
+    append_to_job_buffer(target_buf, "}\n");
 
     printk("run_job, target_buf->data: \n %s\n", target_buf->data);
     printk("run_count: %d\n", run_count);
