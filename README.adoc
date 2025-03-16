@@ -3,7 +3,7 @@
 
 This is a character device gets system information from kernel space, and returns it as a byte stream of JSON.
 
-There is a userspace application that is a demo of this. https://github.com/mikeyfennelly1/os--char-dev-2--u1[Here is that repo]
+There is a userspace application that is a demo of this. https://github.com/mikeyfennelly1/os--char-dev-2--u1 [Here is that repo]
 
 == Usage
 
