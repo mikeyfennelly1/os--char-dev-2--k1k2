@@ -48,6 +48,8 @@ typedef struct Job {
     // The 'head' step is the first step to 
     // run in the job
     Step* head;
+
+    int step_count;
 } Job;
 
 /**

@@ -130,6 +130,8 @@ Job* job_init(char* title, key_value_pair (*head_func)(void))
 
     // set job.head to head_step.
     job->head=head_step;
+
+    job->step_count = 1;
     return job;
 }
 
@@ -141,17 +143,38 @@ Job* job_init(char* title, key_value_pair (*head_func)(void))
  */
 void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void))
 {
-    Job job_to_add_to;
-    job_to_add_to = *job;
-
     // initialize cur as job.head
-    Step cur = (*job_to_add_to.head);
-    while (cur.next)       // until cur.next == NULL...
-        cur = (*cur.next); // ... walk the job.
+    Step* cur = job->head;
+
+    while (cur->next != NULL)       // until cur.next is a NULL pointer
+    {
+        printk("Walking job list. Current KVP key: %s\n", cur->get_kvp().key);
+        cur = cur->next;            // ... walk the job.
+    }
+    
+    if (get_kvp_func == NULL)
+    {
+        printk("get_kvp_func == NULL\n");
+        return;
+    }
 
     // create the step to append
     Step* p_step_to_add = step_init(get_kvp_func);
-    cur.next = p_step_to_add;
+    if (p_step_to_add == NULL)
+    {
+        printk(KERN_ERR "Pointer to step to add is NULL\n");
+        return;
+    }
+    cur->next = p_step_to_add;
+
+    if (cur->next == NULL)
+    {
+        printk("End of the list reached.\n");
+        printk("kvp_of cur (expected to be last) is: %s:%s.\n", cur->get_kvp().key, cur->get_kvp().value);
+    }
+
+
+    job->step_count++;
     return;
 }
 
@@ -174,15 +197,20 @@ char* run_job(Job* j)
 
     DynamicJobBuffer* target_buf = init_job_buffer();
 
+    int run_count = 0;
+
     Step* cur = j->head;
     while (cur != NULL)
     {
         key_value_pair cur_kvp = cur->get_kvp();
-        char this_kvp_buf[40];
-        sprintf(this_kvp_buf, "%s, %s\n", cur_kvp.key, cur_kvp.value);
-        append_to_job_buffer(target_buf, this_kvp_buf);
+        append_to_job_buffer(target_buf, cur_kvp.key);
+        append_to_job_buffer(target_buf, cur_kvp.value);
+        run_count++;
         cur = cur->next;
     }
+
+    printk("run_job, target_buf->data: \n %s\n", target_buf->data);
+    printk("run_count: %d\n", run_count);
 
     return target_buf->data;
 }
@@ -200,10 +228,13 @@ Job* get_current_job(void)
     {
         case CPU:
             current_job = get_cpu_job();
+            break;
         case MEMORY:
             current_job = get_memory_job();
+            break;
         case DISK:
             current_job = get_disk_job();
+            break;
         default:
             current_job = NULL;
     }
