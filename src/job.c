@@ -197,17 +197,25 @@ char* run_job(Job* j)
 
     DynamicJobBuffer* target_buf = init_job_buffer();
 
+    append_to_job_buffer(target_buf, "{");
     int run_count = 0;
 
     Step* cur = j->head;
     while (cur != NULL)
     {
-        key_value_pair cur_kvp = cur->get_kvp();
-        append_to_job_buffer(target_buf, cur_kvp.key);
-        append_to_job_buffer(target_buf, cur_kvp.value);
         run_count++;
+        char* comment;
+        if (run_count == j->step_count)
+            comment = "\0";
+        else
+            comment = ",";
+        key_value_pair cur_kvp = cur->get_kvp();
+        char tmp_buf[40];
+        sprintf(tmp_buf, "\"%s\":\"%s\"%s", cur_kvp.key, cur_kvp.value, comment);
+        append_to_job_buffer(target_buf, tmp_buf);
         cur = cur->next;
     }
+    append_to_job_buffer(target_buf, "}");
 
     printk("run_job, target_buf->data: \n %s\n", target_buf->data);
     printk("run_count: %d\n", run_count);
