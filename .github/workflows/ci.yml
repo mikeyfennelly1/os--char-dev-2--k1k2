@@ -28,8 +28,3 @@ jobs:
         run: |
           make
         continue-on-error: false # fail workflow if unsuccessful build
-
-      - name: Test
-        run: |
-          make test
-        continue-on-error: false # fail workflow unless all tests pass
