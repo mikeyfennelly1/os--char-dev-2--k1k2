@@ -1,6 +1,6 @@
 obj-m += sysinfo.o
 
-sysinfo-objs := job.o procfs.o sysinfo_dev.o
+sysinfo-objs := memory.o cpu.o disk.o job.o procfs.o sysinfo_dev.o
 
 PROJ_ROOT:=.. 
 SCRIPTS:=$(PROJ_ROOT)/scripts

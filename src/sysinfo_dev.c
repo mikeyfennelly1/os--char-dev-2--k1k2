@@ -10,12 +10,12 @@
 #include <linux/version.h>
 
 #include "./procfs.h"
+#include "job.h"
 
 // ioctl definitions
-#define MY_IOCTL_MAGIC 'M'
-#define MY_IOCTL_CMD_1 _IO(MY_IOCTL_MAGIC, 1)
-#define MY_IOCTL_CMD_2 _IOR(MY_IOCTL_MAGIC, 2, int)
-#define MY_IOCTL_CMD_3 _IOW(MY_IOCTL_MAGIC, 3, int)
+#define SET_CIT_CPU 1
+#define SET_CIT_MEMORY 2
+#define SET_CIT_DISK 3
 
 // device definitions
 #define DEVICE_NAME "sysinfo_cdev"
@@ -46,25 +46,30 @@ static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg
 
     switch (cmd)
     {
-        case MY_IOCTL_CMD_1:
-            pr_info("IOCTL command 1 executed\n");
-            break;
-        case MY_IOCTL_CMD_2:
-            value = 1234;
-            if (copy_to_user((int __user *)arg, &value, sizeof(value)))
+        case SET_CIT_CPU:
+            if (set_current_info_type(CPU) < 0)
             {
-                return -EFAULT;
+                pr_info("Failed to set current_info_type to CPU\n");
+                break;
             }
-            pr_info("IOCTL command 2 executed, received: %d\n", value);
+            pr_info("current_info_type set to CPU");
             break;
-        case MY_IOCTL_CMD_3:
-            if (copy_from_user(&value, (int __user*)arg, sizeof(value)))
+        case SET_CIT_MEMORY:
+            if (set_current_info_type(MEMORY) < 0)
             {
-                return -EFAULT;
+                pr_info("Failed to set current_info_type to MEMORY\n");
+                break;
             }
-            pr_info("IOCTL command 3 executed, received%d\n", value);
+            pr_info("current_info_type set to MEMORY");
             break;
-        
+        case SET_CIT_DISK:
+            if (set_current_info_type(DISK) < 0)
+            {
+                pr_info("Failed to set current_info_type to DISK\n");
+                break;
+            }
+            pr_info("current_info_type set to DISK");
+            break;
         default:
             return -EINVAL;
     }
