@@ -26,7 +26,7 @@ ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whateve
     if (*offset > 0)
         return 0;
 
-    sprintf(buffer, "device name:%s\nread count: %d\ntime since initializing device: %d\ncurrent_info_type: %s\n", DEVICE_NAME, get_times_read(), get_time_since_loading_ns(), get_current_job()->job_title);
+    sprintf(buffer, "device name:%s\nread count: %d\ncurrent_info_type: %s\n", DEVICE_NAME, get_times_read(), get_current_job()->job_title);
 
     size_t len = strlen(buffer);
     if (whatever_size < len)
