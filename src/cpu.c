@@ -1,53 +1,105 @@
-#include <asm/cpu.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
-#include <asm/msr.h>
-#include "job.h"
+#include <linux/sched.h>
+#include <linux/ktime.h>
+#include <linux/cpu.h>
+#include <linux/cpufreq.h> 
+#include "cpu.h"
 
 key_value_pair cpu_model(void) { 
     key_value_pair keyVal;
     keyVal.key = "cpu_model";
-    keyVal.value = "dummy_value";
+    keyVal.value = kstrdup(current_cpu_data.x86_model_id, GFP_KERNEL);
+
+    if (!keyVal.value) {
+        keyVal.value = kstrdup("unknown", GFP_KERNEL);
+    }
+
     return keyVal;
 }
 
 key_value_pair cpu_vendor(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_vendor";
-    keyVal.value = "dummy_value";
+    keyVal.value = kstrdup(current_cpu_data.x86_vendor_id, GFP_KERNEL);
+
+    if (!keyVal.value) {
+        keyVal.value = kstrdup("unknown", GFP_KERNEL);
+    }
+
     return keyVal;
 }
 
 key_value_pair cpu_frequency(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_frequency";
-    keyVal.value = "dummy_value";
+
+    unsigned long freq = cpufreq_quick_get(0); 
+
+    char *freq_str = kmalloc(20, GFP_KERNEL);
+    if (!freq_str) {
+        return keyVal;
+    }
+
+    scnprintf(freq_str, 20, "%lu", freq);
+    keyVal.value = freq_str;
+
     return keyVal;
 }
 
 key_value_pair cpu_cores(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_cores";
-    keyVal.value = "dummy_value";
+
+    int num_cores = num_online_cpus();
+
+    char *value = kmalloc(16, GFP_KERNEL);
+    if (!value) {
+        return keyVal;
+    }
+
+    scnprintf(value, 16, "%d", num_cores);
+    keyVal.value = value;
+
     return keyVal;
 }
 
 key_value_pair cpu_load(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_load";
-    keyVal.value = "dummy_value";
+
+    unsigned long load;
+    get_avenrun(&load, FIXED_1, 0);  
+
+    char *load_str = kmalloc(20, GFP_KERNEL);
+    if (!load_str) {
+        return keyVal;
+    }
+
+    scnprintf(load_str, 20, "%lu", load);
+    keyVal.value = load_str;
+
     return keyVal;
 }
  
 key_value_pair cpu_idle_time(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_idle_time";
-    keyVal.value = "dummy_value";
+
+    unsigned long idle_time = get_cpu_idle_time(0, NULL, 0);
+
+    char *idle_str = kmalloc(20, GFP_KERNEL);
+    if (!idle_str) {
+        return keyVal;
+    }
+
+    scnprintf(idle_str, 20, "%lu", idle_time);
+    keyVal.value = idle_str;
+
     return keyVal;
 }
 
-Job* get_cpu_job(void)
-{
+Job* get_cpu_job(void) {
     Job* cpu_info = job_init("cpu", &cpu_model);
     append_step_to_job(cpu_info, &cpu_vendor);
     append_step_to_job(cpu_info, &cpu_frequency);
