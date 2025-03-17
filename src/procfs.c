@@ -21,11 +21,12 @@ void __exit char_device_proc_exit(void);
  */
 ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
 {
-    Job* current_job = get_current_job();
-    const char *buffer = run_job(current_job);
+    char buffer[256];
 
     if (*offset > 0)
         return 0;
+
+    sprintf(buffer, "device name:%s\nread count: %d\ntime since initializing device: %d\ncurrent_info_type: %s\n", DEVICE_NAME, get_times_read(), get_time_since_loading_ns(), get_current_job()->job_title);
 
     size_t len = strlen(buffer);
     if (whatever_size < len)
