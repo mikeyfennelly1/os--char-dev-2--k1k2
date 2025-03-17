@@ -1,9 +1,11 @@
 #include <linux/kernel.h>
 #include <linux/slab.h>
+#include <linux/version.h>
 #include <linux/sched.h>
 #include <linux/ktime.h>
 #include <linux/cpu.h>
 #include <linux/cpufreq.h> 
+#include <linux/sched/loadavg.h>
 #include "cpu.h"
 
 key_value_pair cpu_idle_time(void);
@@ -18,7 +20,7 @@ key_value_pair cpu_model(void)
 { 
     key_value_pair keyVal;
     keyVal.key = "cpu_model";
-    keyVal.value = kstrdup(current_cpu_data.x86_model_id, GFP_KERNEL);
+    keyVal.value = kstrdup(cpu_data(smp_processor_id()).x86_model_id, GFP_KERNEL);
 
     if (!keyVal.value) {
         keyVal.value = kstrdup("unknown", GFP_KERNEL);
@@ -31,7 +33,7 @@ key_value_pair cpu_vendor(void)
 {
     key_value_pair keyVal;
     keyVal.key = "cpu_vendor";
-    keyVal.value = kstrdup(current_cpu_data.x86_vendor_id, GFP_KERNEL);
+    keyVal.value = kstrdup(cpu_data(smp_processor_id()).x86_vendor_id, GFP_KERNEL);
 
     if (!keyVal.value) {
         keyVal.value = kstrdup("unknown", GFP_KERNEL);
@@ -76,13 +78,17 @@ key_value_pair cpu_cores(void)
     return keyVal;
 }
 
-key_value_pair cpu_load(void)
-{
+key_value_pair cpu_load(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_load";
 
     unsigned long load;
-    get_avenrun(&load, FIXED_1, 0);  
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
+    load = avenrun[0];
+#else
+    get_avenrun(&load, FIXED_1, 0);
+#endif
 
     char *load_str = kmalloc(20, GFP_KERNEL);
     if (!load_str) {
