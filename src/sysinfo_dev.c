@@ -8,6 +8,7 @@
 #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/version.h>
+#include <linux/time.h>
 
 #include "./procfs.h"
 #include "job.h"
@@ -18,16 +19,20 @@
 #define SET_CIT_DISK 3
 
 // device definitions
-#define DEVICE_NAME "sysinfo_cdev"
+#define DEVICE_NAME "sysinfo"
 
 // device constants
 static dev_t dev_num;
 static struct cdev sysinfo_cdev;
 static struct class *sysinfo_dev_class;
+static ktime_t start_time;
+static int times_read = 0;
 
 int __init sysinfo_cdev_init(void);
 void __exit sysinfo_cdev_exit(void);
+int get_times_read(void);
 ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos);
+
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
@@ -43,6 +48,7 @@ static int sysinfo_release(struct inode *inode, struct file *filep)
 
 ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos)
 {
+    times_read++;
     ssize_t bytes_to_copy, bytes_copied;
     Job* current_job = get_current_job();
     if (current_job == NULL)
@@ -82,9 +88,22 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
     return bytes_to_copy;
 }
 
+int get_times_read(void) 
+{
+    return times_read / 2;
+}
+
+int get_time_since_loading_ns(void)
+{
+    ktime_t current_time = ktime_get();
+    int time_diff = ktime_to_ns(current_time) - ktime_to_ns(start_time);
+    return time_diff;
+}
+
 static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     int value;
+    printk("ioctl called\n");
 
     switch (cmd)
     {
@@ -137,6 +156,7 @@ static struct file_operations fops = {
  */
 int __init sysinfo_cdev_init(void)
 {
+    start_time = ktime_get();
     int ret;
     
     ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);

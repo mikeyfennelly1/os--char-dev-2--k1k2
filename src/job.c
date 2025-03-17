@@ -199,16 +199,25 @@ char* run_job(Job* j)
 
     int run_count = 0;
 
+    append_to_job_buffer(target_buf, "{");
     Step* cur = j->head;
     while (cur != NULL)
     {
         key_value_pair cur_kvp = cur->get_kvp();
+        append_to_job_buffer(target_buf, "\"");
         append_to_job_buffer(target_buf, cur_kvp.key);
+        append_to_job_buffer(target_buf, "\"");
+        append_to_job_buffer(target_buf, ":");
+        append_to_job_buffer(target_buf, "\"");
         append_to_job_buffer(target_buf, cur_kvp.value);
+        append_to_job_buffer(target_buf, "\"");
+        if (cur->next != NULL)
+            append_to_job_buffer(target_buf, ",");
         run_count++;
         cur = cur->next;
     }
 
+    append_to_job_buffer(target_buf, "}");
     printk("run_job, target_buf->data: \n %s\n", target_buf->data);
     printk("run_count: %d\n", run_count);
 
@@ -253,8 +262,10 @@ Job* get_current_job(void)
  */
 int set_current_info_type(int value)
 {
+    printk("Attempting to set ioctl val to: %d\n", value);
     if (value <=3 && value >=1)
     {
+        printk("value <=3 && value >=1\n");
         current_info_type = value;
         return 0;
     }
