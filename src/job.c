@@ -245,7 +245,7 @@ Job* get_current_job(void)
             current_job = get_disk_job();
             break;
         default:
-            current_job = NULL;
+            current_job = get_cpu_job();
     }
     return current_job;
 }

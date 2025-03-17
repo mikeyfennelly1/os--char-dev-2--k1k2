@@ -2,6 +2,13 @@
 #include <linux/slab.h>
 #include "job.h"
 
+static key_value_pair get_total_ram(void);
+static key_value_pair get_free_ram(void);
+static key_value_pair get_buffer_ram(void);
+static key_value_pair get_total_swap(void);
+static key_value_pair get_free_swap(void);
+Job* get_memory_job(void);
+
 static key_value_pair get_total_ram(void)
 {
     key_value_pair* kvp = (key_value_pair *) kmalloc(sizeof(key_value_pair), GFP_KERNEL);

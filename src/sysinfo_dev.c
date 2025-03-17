@@ -31,6 +31,8 @@ static int times_read = 0;
 int __init sysinfo_cdev_init(void);
 void __exit sysinfo_cdev_exit(void);
 int get_times_read(void);
+ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos);
+
 
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
