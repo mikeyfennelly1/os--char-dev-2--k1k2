@@ -4,7 +4,7 @@
 #include <linux/ktime.h>
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
-#include <linux/version.h>  // Required for kernel version checking
+#include <linux/version.h>  
 #include "cpu.h"
 
 key_value_pair cpu_model(void) { 
@@ -12,17 +12,11 @@ key_value_pair cpu_model(void) {
     keyVal.key = "cpu_model";
 
     #if defined(CONFIG_X86)
-    {
         keyVal.value = kstrdup(cpu_data(smp_processor_id()).x86_model_id, GFP_KERNEL);
-    }
     #elif defined(CONFIG_ARM) || defined(CONFIG_ARM64)
-    {
-        keyVal.value = kstrdup("ARM CPU", GFP_KERNEL);  // No model name in ARM
-    }
+        keyVal.value = kstrdup("ARM CPU", GFP_KERNEL); 
     #else
-    {
         keyVal.value = kstrdup("Unknown CPU", GFP_KERNEL);
-    }
     #endif
 
     return keyVal;
@@ -33,17 +27,11 @@ key_value_pair cpu_vendor(void) {
     keyVal.key = "cpu_vendor";
 
     #if defined(CONFIG_X86)
-    {
         keyVal.value = kstrdup(cpu_data(smp_processor_id()).x86_vendor_id, GFP_KERNEL);
-    }
     #elif defined(CONFIG_ARM) || defined(CONFIG_ARM64)
-    {
         keyVal.value = kstrdup("ARM Vendor", GFP_KERNEL);
-    }
     #else
-    {
         keyVal.value = kstrdup("Unknown Vendor", GFP_KERNEL);
-    }
     #endif
 
     return keyVal;
@@ -56,20 +44,16 @@ key_value_pair cpu_frequency(void) {
     unsigned long freq = 0;
 
     #if defined(CONFIG_CPU_FREQ)
-    {
         freq = cpufreq_quick_get(0);
-    }
     #elif defined(CONFIG_ARM) || defined(CONFIG_ARM64)
-    {
         freq = arch_timer_get_cntfrq();
-    }
     #endif
 
     char *freq_str = kmalloc(20, GFP_KERNEL);
     if (!freq_str)
         return keyVal;
 
-    scnprintf(freq_str, 20, "%lu", freq ? freq : 1000000);  // Default 1GHz
+    scnprintf(freq_str, 20, "%lu", freq ? freq : 1000000); 
     keyVal.value = freq_str;
 
     return keyVal;
@@ -96,13 +80,12 @@ key_value_pair cpu_load(void) {
     keyVal.key = "cpu_load";
 
     unsigned long load;
-    get_avenrun(&load, FIXED_1, 0);  // Corrected function call
-
+    get_avenrun(&load, FIXED_1, 0);  
     char *load_str = kmalloc(20, GFP_KERNEL);
     if (!load_str)
         return keyVal;
 
-    scnprintf(load_str, 20, "%lu", load / 1024); // Convert fixed-point to normal
+    scnprintf(load_str, 20, "%lu", load / 1024); 
     keyVal.value = load_str;
 
     return keyVal;
@@ -115,13 +98,9 @@ key_value_pair cpu_idle_time(void) {
     unsigned long idle_time = 0;
 
     #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
-    {
-        idle_time = get_cpu_idle_time_us(0) / 1000; // Convert µs to ms
-    }
+        idle_time = get_cpu_idle_time_us(0) / 1000; 
     #else
-    {
         idle_time = get_cpu_idle_time(0, NULL, 0);
-    }
     #endif
 
     char *idle_str = kmalloc(20, GFP_KERNEL);
