@@ -108,7 +108,7 @@ Job* get_cpu_job(void) {
     Job* cpu_info = job_init("cpu", &cpu_model);
     append_step_to_job(cpu_info, &cpu_vendor);
     append_step_to_job(cpu_info, &cpu_frequency);
-    append_step_to_job(cpu_info, &cpu_cores)
+    append_step_to_job(cpu_info, &cpu_cores);
     append_step_to_job(cpu_info, &cpu_idle_time);
 
     return cpu_info;
