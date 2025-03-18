@@ -4,8 +4,17 @@
 #include <linux/ktime.h>
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
+#include <linux/sched/loadavg.h>
 #include <linux/version.h>  
 #include "cpu.h"
+
+key_value_pair cpu_model(void);
+key_value_pair cpu_vendor(void);
+key_value_pair cpu_frequency(void);
+key_value_pair cpu_cores(void);
+key_value_pair cpu_load(void);
+key_value_pair cpu_idle_time(void);
+Job* get_cpu_job(void);
 
 key_value_pair cpu_model(void) { 
     key_value_pair keyVal;
@@ -80,7 +89,7 @@ key_value_pair cpu_load(void) {
     keyVal.key = "cpu_load";
 
     unsigned long load;
-    get_avenrun(&load, FIXED_1, 0);  
+    get_avenrun(&load, 1, 0);  
     char *load_str = kmalloc(20, GFP_KERNEL);
     if (!load_str)
         return keyVal;
@@ -98,7 +107,7 @@ key_value_pair cpu_idle_time(void) {
     unsigned long idle_time = 0;
 
     #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
-        idle_time = get_cpu_idle_time_us(0) / 1000; 
+        idle_time = get_cpu_idle_time(0, NULL, 0) / 1000;; 
     #else
         idle_time = get_cpu_idle_time(0, NULL, 0);
     #endif
