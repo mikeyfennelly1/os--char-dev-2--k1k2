@@ -4,7 +4,6 @@
 #include <linux/ktime.h>
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
-#include <linux/loadavg.h>
 #include <linux/version.h>  
 #include "cpu.h"
 
@@ -12,7 +11,6 @@ key_value_pair cpu_model(void);
 key_value_pair cpu_vendor(void);
 key_value_pair cpu_frequency(void);
 key_value_pair cpu_cores(void);
-key_value_pair cpu_load(void);
 key_value_pair cpu_idle_time(void);
 Job* get_cpu_job(void);
 
@@ -83,29 +81,6 @@ key_value_pair cpu_cores(void) {
 
     return keyVal;
 }
-
-
-key_value_pair cpu_load(void) {
-    key_value_pair keyVal;
-    keyVal.key = "cpu_load";
-
-    unsigned long load[3];
-
-    if (get_loadavg(load, 3) != 3) {
-        keyVal.value = kstrdup("Unknown", GFP_KERNEL);
-    }
-    else {
-        char *load_str = kmalloc(20, GFP_KERNEL);
-        if (!load_str) {
-            return keyVal;
-        }
-
-        scnprintf(load_str, 20, "%lu", load[0]); 
-        keyVal.value = load_str;
-    }
-
-    return keyVal;
-}
  
 key_value_pair cpu_idle_time(void) {
     key_value_pair keyVal;
@@ -133,8 +108,7 @@ Job* get_cpu_job(void) {
     Job* cpu_info = job_init("cpu", &cpu_model);
     append_step_to_job(cpu_info, &cpu_vendor);
     append_step_to_job(cpu_info, &cpu_frequency);
-    append_step_to_job(cpu_info, &cpu_cores);
-    append_step_to_job(cpu_info, &cpu_load);
+    append_step_to_job(cpu_info, &cpu_cores)
     append_step_to_job(cpu_info, &cpu_idle_time);
 
     return cpu_info;
