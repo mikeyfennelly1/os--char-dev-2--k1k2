@@ -4,7 +4,7 @@
 #include <linux/ktime.h>
 #include <linux/cpu.h>
 #include <linux/cpufreq.h>
-#include <linux/sched/loadavg.h>
+#include <linux/loadavg.h>
 #include <linux/version.h>  
 #include "cpu.h"
 
