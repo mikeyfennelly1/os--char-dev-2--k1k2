@@ -84,6 +84,7 @@ key_value_pair cpu_cores(void) {
     return keyVal;
 }
 
+
 key_value_pair cpu_load(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_load";
@@ -96,16 +97,12 @@ key_value_pair cpu_load(void) {
     else {
         char *load_str = kmalloc(20, GFP_KERNEL);
         if (!load_str) {
-            return keyVal; 
+            return keyVal;
+        }
+
+        scnprintf(load_str, 20, "%lu", load[0]); 
+        keyVal.value = load_str;
     }
-
-
-    char *load_str = kmalloc(20, GFP_KERNEL);
-    if (!load_str)
-        return keyVal;
-
-    scnprintf(load_str, 20, "%lu", load[0]); 
-    keyVal.value = load_str;
 
     return keyVal;
 }
@@ -117,7 +114,7 @@ key_value_pair cpu_idle_time(void) {
     unsigned long idle_time = 0;
 
     #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)
-        idle_time = get_cpu_idle_time(0, NULL, 0) / 1000;; 
+        idle_time = get_cpu_idle_time(0, NULL, 0) / 1000;
     #else
         idle_time = get_cpu_idle_time(0, NULL, 0);
     #endif
