@@ -88,13 +88,23 @@ key_value_pair cpu_load(void) {
     key_value_pair keyVal;
     keyVal.key = "cpu_load";
 
-    unsigned long load;
-    get_avenrun(&load, 1, 0);  
+    unsigned long load[3];
+
+    if (get_loadavg(load, 3) != 3) {
+        keyVal.value = kstrdup("Unknown", GFP_KERNEL);
+    }
+    else {
+        char *load_str = kmalloc(20, GFP_KERNEL);
+        if (!load_str) {
+            return keyVal; 
+    }
+
+
     char *load_str = kmalloc(20, GFP_KERNEL);
     if (!load_str)
         return keyVal;
 
-    scnprintf(load_str, 20, "%lu", load / 1024); 
+    scnprintf(load_str, 20, "%lu", load[0]); 
     keyVal.value = load_str;
 
     return keyVal;
