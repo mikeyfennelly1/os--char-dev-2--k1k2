@@ -229,7 +229,8 @@ static struct file_operations fops = {
 /**
  * @brief handler for event of device being loaded into kernel space.
  * 
- * @return 
+ * @return integer status code - 0 on success, non-zero value 
+ *         relevant to error otherwise.
  */
 int __init sysinfo_cdev_init(void)
 {
@@ -297,6 +298,12 @@ int __init sysinfo_cdev_init(void)
     return 0;
 };
 
+/**
+ * @brief handler for event of devive being unloaded from kernel
+ * 
+ * Tears down device and device class and removed the prok file.
+ * Prints to kernel logs before returning.
+ */
 void __exit sysinfo_cdev_exit(void)
 {
     // remove the device from the kernel
