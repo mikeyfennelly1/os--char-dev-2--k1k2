@@ -9,6 +9,7 @@
 #include <linux/device.h>
 #include <linux/version.h>
 #include <linux/time.h>
+#include <linux/errno.h>
 
 #include "./procfs.h"
 #include "job.h"
@@ -32,24 +33,30 @@ int __init sysinfo_cdev_init(void);
 void __exit sysinfo_cdev_exit(void);
 int get_times_read(void);
 ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos);
+    
 
-
+// Method to run when open() ran on dev node
 static int sysinfo_open(struct inode *inode, struct file *fp)
 {
     printk(KERN_INFO "Device %s opened\n", DEVICE_NAME);
     return 0;
 }
 
+// Function to run when close() is called on device
 static int sysinfo_release(struct inode *inode, struct file *filep)
 {
     printk(KERN_INFO "release\n");
     return 0;
 }
 
+// function to run when read() ran on device
 ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos)
 {
-    times_read++;
+    times_read++; // increment the times_read counter
+
     ssize_t bytes_to_copy, bytes_copied;
+
+    // get the current job
     Job* current_job = get_current_job();
     if (current_job == NULL)
     {
@@ -57,21 +64,13 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
         return -1;
     }
 
+    // use the current_job to retrieve sysinfo for current moment in time.
+    // store job data in character buffer.
     char* current_job_data = run_job(current_job);
-    if (current_job_data == NULL)
+    if (current_job_data == NULL || strlen(current_job_data))
     {
-        printk("current_job_data == NULL\n");
-        return -1;
-    }
-
-    printk("current_job_data: %s\n", current_job_data);
-    printk("job step_count: %d\n", current_job->step_count);
-
-    int message_len = strlen(current_job_data);
-    if (message_len <= 0)
-    {
-        printk("message_len <= 0");
-        return -1;
+        printk("There is no data for the current_data_type.\n");
+        return -EINVAL;
     }
 
     if (*f_pos >= message_len)
@@ -79,10 +78,13 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
 
     bytes_to_copy = min(count, (size_t)(message_len - *f_pos));
 
+    // Copy the retrieved data to user space
     bytes_copied = copy_to_user(user_buffer, current_job_data + *f_pos, bytes_to_copy);
     if (bytes_copied)
         return -EFAULT;
 
+    // increment the file position pointer to point
+    // where previous read stopped.
     *f_pos += bytes_to_copy;
 
     return bytes_to_copy;
