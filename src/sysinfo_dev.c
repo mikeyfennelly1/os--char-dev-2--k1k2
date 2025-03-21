@@ -54,7 +54,9 @@ static DEFINE_MUTEX(device_mutex);
 
 /**
  * @brief function to run when device is opened.
+ * 
  * @param inode - pointer to the inode for this device.
+ * 
  * @return integer status code - 0 on success, non-zero value 
  *         relevant to error otherwise
  */
@@ -152,6 +154,7 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
 
 /**
  * @brief get the number of times the /dev node has beed read
+ * 
  * @return number of times the device has been read.
  */
 int get_times_read(void) 
@@ -161,6 +164,7 @@ int get_times_read(void)
 
 /**
  * @brief get the time since loading the device in nanoseconds
+ * 
  * @return number of nanoseconds since device loading
  */
 int get_time_since_loading_ns(void)
