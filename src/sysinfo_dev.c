@@ -227,22 +227,24 @@ static struct file_operations fops = {
 };
 
 /**
- * Initialize the device.
+ * @brief handler for event of device being loaded into kernel space.
  * 
- * This function also encapsulates the creation of the /proc
- * filesystem for this device. This was done so that the
- * /proc filesystem could be created on module load.
+ * @return 
  */
 int __init sysinfo_cdev_init(void)
 {
+    // set the start time variable
     start_time = ktime_get();
-    int ret;
-    
-    ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
-    if (ret < 0)
+
+    // variable to store return values from functions
+    int err_ret;
+
+    // allocate a character device in kernel space
+    err_ret = alloc_chrdev_region(&dev_num, 0, 1, DEVICE_NAME);
+    if (err_ret < 0)
     {
-        printk(KERN_INFO "Failed to allocate major\n");
-        return ret;
+        printk(KERN_WARNING "Failed to allocate major\n");
+        return -EFAULT;
     }
     printk(KERN_INFO "Allocated Major: %d, Minor: %d\n", MAJOR(dev_num), MINOR(dev_num));
 
@@ -251,31 +253,41 @@ int __init sysinfo_cdev_init(void)
     sysinfo_cdev.owner = THIS_MODULE;
 
     // add dev to kernel
-    ret = cdev_add(&sysinfo_cdev, dev_num, 1);
-    if (ret < 0)
+    err_ret = cdev_add(&sysinfo_cdev, dev_num, 1);
+    if (err_ret < 0)
     {
-        pr_err("Failed to add cdev\n");
+        pr_err("Failed to add cdev %s\n", err_ret);
+
+        // unregister the character device
         unregister_chrdev_region(dev_num, 1);
-        return ret;
+
+        return err_ret;
     }
 
     sysinfo_dev_class = class_create(DEVICE_NAME);
     if (IS_ERR(sysinfo_dev_class))
     {
-        printk(KERN_INFO "Failed to create sysinfo_dev_class\n");
-        cdev_del(&sysinfo_cdev);
+        pr_err("Failed to create sysinfo_dev_class\n");
+        // delete the sysinfo device
+        cdev_del(&sysinfo_cdev); 
+        // unregister the character device by major/minor
         unregister_chrdev_region(dev_num, 1);
+        
         return PTR_ERR(sysinfo_dev_class);
     }
 
     // create a device node in /dev directory
     if (device_create(sysinfo_dev_class, NULL, dev_num, NULL, DEVICE_NAME) == NULL)
     {
-        printk(KERN_INFO "Failed to create device\n");
+        pr_err("Failed to create device\n");
+        // destroy the device class
         class_destroy(sysinfo_dev_class);
+        // delete the character device
         cdev_del(&sysinfo_cdev);
+        // unregister character device via major/minor
         unregister_chrdev_region(dev_num, 1);
-        return -1;
+
+        return -EFAULT;
     }
 
     // create the /proc fs on module init
