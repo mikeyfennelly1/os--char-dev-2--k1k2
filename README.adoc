@@ -26,6 +26,8 @@ This is the single sysinfo value that is returned from the module. The available
 2. disk
 3. memory
 
+You can toggle between these info types using this device's ioctl() function, and it's commands.
+
 == Install
 
 Clone this repo.
@@ -42,9 +44,29 @@ Install dependencies.
 sudo make install
 ----
 
-Build the kernel object.
+== Buid and insert kernel object file.
+
+=== Build.
 
 [source, bash]
 ----
 make
+----
+
+When you run make, there will be a new directory _./build_, and a subdirectory _./build/k_ojbs_. This directory contains the kernel object (.ko) file for the module.
+
+=== Insert
+
+[source, bash]
+----
+sudo insmod ./build/k_objs/sysinfo.ko
+----
+
+=== Verify module load
+
+The following command will print the name of the kernel module if it is inserted.
+
+[source, bash]
+----
+lsmod | grep sys
 ----
