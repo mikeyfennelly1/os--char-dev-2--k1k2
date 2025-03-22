@@ -8,41 +8,39 @@
  * @author Mikey Fennelly
  */
 
-// headers to include
-#include <linux/kernel.h>
-#include <linux/module.h>
-#include <linux/uaccess.h>
-#include <linux/fs.h>
-#include <linux/cdev.h>
-#include <linux/init.h>
-#include <linux/file.h>
-#include <linux/kernel.h>
-#include <linux/device.h>
-#include <linux/version.h>
-#include <linux/time.h>
-#include <linux/errno.h>
-#include <linux/mutex.h>
+#include <linux/kernel.h>                       // kernel headers
+#include <linux/module.h>                       // kernel module development headers
+#include <linux/uaccess.h>                      // userspace interaction utility function headers
+#include <linux/fs.h>                           // filesystem utility functions
+#include <linux/cdev.h>                         // character device utility functions
+#include <linux/init.h>                         // initialization and exit macros
+#include <linux/file.h>                         // 
+#include <linux/device.h>                       // utils for managing devices in kernel space
+#include <linux/version.h>                      // utils for checking kernel version at compile time
+#include <linux/time.h>                         // time functions
+#include <linux/errno.h>                        // error macros
+#include <linux/mutex.h>                        // mutual exclusion utilities
 
-// headers from this application
-#include "./procfs.h"
-#include "job.h"
+// sysinfo device specific headers
+#include "./procfs.h"                           // proc filesystem utilities
+#include "job.h"                                // types and macros for Job API
 
 // ioctl definitions
-#define SET_CIT_CPU 1
-#define SET_CIT_MEMORY 2
-#define SET_CIT_DISK 3
+#define SET_CIT_CPU 1                           // set the current_info_type to cpu
+#define SET_CIT_MEMORY 2                        // set the current_info_type to memory
+#define SET_CIT_DISK 3                          // set the current_info_type to memory
 
 // device definitions
 #define DEVICE_NAME "sysinfo"
 
 // device constants
-static dev_t dev_num;
-static struct cdev sysinfo_cdev;
-static struct class *sysinfo_dev_class;
-static ktime_t start_time;
-static int times_read = 0;
-static bool device_open false;
-static DEFINE_MUTEX(device_mutex);
+static dev_t dev_num;                           // device number - major and minor
+static struct cdev sysinfo_cdev;                // character device struct
+static struct class *sysinfo_dev_class;         //
+static ktime_t start_time;                      // record start time in this var
+static int times_read = 0;                      // counter for the amount of times read() called on this device
+static bool device_open false;                  // true if user space application has opened device and not closed yet, else false
+static DEFINE_MUTEX(device_mutex);              // mutex to ensure mutual exclusion over processes that can open device
 
 // function prototypes
 int __init sysinfo_cdev_init(void);
@@ -115,7 +113,7 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
     Job* current_job = get_current_job();
     if (current_job == NULL)
     {
-        printk(KERN_WARNING "current_job pointer is NULL\n");
+        pr_err("current_job pointer is NULL\n");
         return -EFAULT;
     }
 
@@ -124,12 +122,12 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
     char* current_job_data = run_job(current_job);
     if (current_job_data == NULL)
     {
-        printk(KERN_WARNING "current_job_data pointer is null\n");
+        pr_err("current_job_data pointer is null\n");
         return -EFAULT;
     }
     if (strlen(current_job_data) <= 0)
     {
-        printk(KERN_INFO "sysinfo device retrieved no data\n");
+        pr_err("sysinfo device retrieved no data\n");
         return -EAGAIN;
     }
 
@@ -323,12 +321,10 @@ void __exit sysinfo_cdev_exit(void)
     return;
 }
 
-// register the init function for the device
-module_init(sysinfo_cdev_init);
-// register the exit function for the device
-module_exit(sysinfo_cdev_exit);
+module_init(sysinfo_cdev_init);                             // register the init function for the device
+module_exit(sysinfo_cdev_exit);                             // register the exit function for the device
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("GPL");                     
 MODULE_AUTHOR("Sarah McDonagh");
 MODULE_AUTHOR("Danny Quinn");
 MODULE_AUTHOR("Mikey Fennelly");
