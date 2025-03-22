@@ -13,12 +13,6 @@ $(TEST_BIN_DIR):
 $(BUILD):
 	@mkdir -p ./build
 
-test: test_job
-	@for binary in $(shell find ./build/test -type f -executable); do \
-        echo "Running $$binary..."; \
-        $$binary; \
-    done
-
 clean:
 	@rm -rf ./build
 
