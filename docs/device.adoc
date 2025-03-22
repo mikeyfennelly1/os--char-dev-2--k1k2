@@ -1,7 +1,0 @@
-= device
-
-This module can be used to control operations of the device such as:
-
-1. Lifecycle (creating and tearing down the device)
-2. The active job
-3. The output location of the device

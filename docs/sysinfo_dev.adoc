@@ -1,0 +1,10 @@
+= sysinfo_dev
+
+This file defines device functions such as:
+
+1. *init* - to run when the device is loaded into kernel space. This method also invokes the init function for the /proc file for this device.
+2. *exit* - to run when the device is unloaded from kernel space. This method also invokes the exit function for the /proc file.
+3. *open* - This function opens the file for the user space application.
+4. *close* - This function closes the device.
+5. *read* - This function returns the data for the current_info_type to user space caller.
+6. *ioctl* - toggles between the current_info_type, based on the ioctl command used.

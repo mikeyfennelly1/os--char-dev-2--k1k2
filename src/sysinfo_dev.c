@@ -41,6 +41,8 @@ static struct cdev sysinfo_cdev;
 static struct class *sysinfo_dev_class;
 static ktime_t start_time;
 static int times_read = 0;
+static bool device_open false;
+static DEFINE_MUTEX(device_mutex);
 
 // function prototypes
 int __init sysinfo_cdev_init(void);
@@ -48,9 +50,6 @@ void __exit sysinfo_cdev_exit(void);
 int get_times_read(void);
 int get_time_since_loading_ns(void);
 ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos);
-
-static bool device_open false;
-static DEFINE_MUTEX(device_mutex);
 
 /**
  * @brief function to run when device is opened.
