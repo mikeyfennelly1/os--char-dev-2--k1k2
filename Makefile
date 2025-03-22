@@ -9,7 +9,11 @@ BUILD:=$(PROJ_ROOT)/build			# directory containing build objects
 all: $(BUILD)
 	# build kernel module from sources in ./src directory
 	make -C /lib/modules/$(shell uname -r)/build M=$(SRCS) modules
+	
+	# move targets out to build directory
 	cd $(SRCS) && $(SCRIPTS)/post_build_cleanup.sh
+
+	# remove any other generated files from source directory
 	make -C /lib/modules/$(shell uname -r)/build M=$(SRCS) clean
 	
 # create ./test/bin directory if it doesn't exist
