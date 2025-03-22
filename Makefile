@@ -1,17 +1,21 @@
-PROJ_ROOT:=$(shell pwd)				# pwd at beginning of make command
-SRCS:=$(PROJ_ROOT)/src 				# directory containing sources
-SCRIPTS:=$(PROJ_ROOT)/scripts		# directory containing scripts
-BUILD:=$(PROJ_ROOT)/build			# directory containing build objects
+# pwd at beginning of make command
+PROJ_ROOT:=$(shell pwd)
+# directory containing sources
+SRCS:=$(PROJ_ROOT)/src
+# directory containing scripts
+SCRIPTS:=$(PROJ_ROOT)/scripts
+# directory containing build objects
+BUILD:=$(PROJ_ROOT)/build
 
 # default target
 #
 # build the target .o and .ko files
 all: $(BUILD)
 	# build kernel module from sources in ./src directory
-	make -C /lib/modules/$(shell uname -r)/build M=$(SRCS) modules
+	make -C /lib/modules/$(shell uname -r)/build M=$(PROJ_ROOT)/src modules
 	
 	# move targets out to build directory
-	cd $(SRCS) && $(SCRIPTS)/post_build_cleanup.sh
+	cd $(SRCS) && $(SCRIPTS)/moveTargetsToBuild.sh
 
 	# remove any other generated files from source directory
 	make -C /lib/modules/$(shell uname -r)/build M=$(SRCS) clean

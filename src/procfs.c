@@ -6,21 +6,26 @@
  * @author Mikey Fennelly
  */
 
-#include <linux/proc_fs.h>
-#include <linux/module.h>
-#include <linux/seq_file.h>
-#include <linux/kernel.h>
+#include <linux/proc_fs.h>                  // functions for /proc file interaction
+#include <linux/module.h>                   // functions for kernel module development
+#include <linux/seq_file.h>                 // sequential file functions
+#include <linux/kernel.h>                   // kernel development headerss
 
 #include "sysinfo_dev.h"
 #include "job.h"
 
 #define PROC_FILE_NAME "sysinfo"
+#define EOF 0
+#define PROCFS_MAX_SIZE 256
 
 ssize_t sysinfo_proc_read(struct file *file, char *read_buffer, size_t whatever_size,  loff_t *offset);
 int append_to_proc(struct seq_file *m, void *v);
 int my_proc_open(struct inode *inode, struct file *file);
 int __init char_device_proc_init(void);
 void __exit char_device_proc_exit(void);
+
+// structure to hold information about the proc file
+struct proc_dir_entry *proc_entry;
 
 /**
  * @brief called when userspace file reads /proc/sysinfo
@@ -32,28 +37,45 @@ void __exit char_device_proc_exit(void);
  * 
  * @return size of the read in bytes
  */
-ssize_t sysinfo_proc_read(struct file *file, char *read_buffer, size_t available_bytes,  loff_t *offset)
+ssize_t
+sysinfo_proc_read(struct file *file,
+                  char *read_buffer,
+                  size_t available_bytes,
+                  loff_t *offset)
 {
-    char buffer[256];
+    int ret;
+    char buffer[PROCFS_MAX_SIZE];
 
+    // check if read is finished, if so return EOF
     if (*offset > 0)
-        return 0;
+    {
+        return EOF;
+    }
 
-    sprintf(buffer, "device name:%s\nread count: %d\ncurrent_info_type: %s\n", DEVICE_NAME, get_times_read(), get_current_job()->job_title);
+    // use snprintf to ensure write doesn't overflow buffer
+    ret = snprintf(buffer, PROCFS_MAX_SIZE, "device name:%s\nread count: %d\ncurrent_info_type: %s\n", DEVICE_NAME, get_times_read(), get_current_job()->job_title);
+    if (ret < 0)
+    {
+        pr_err("Copy to /proc buffer exceeded buffer limit.\n");
+        return -EFAULT;
+    }
 
     size_t len = strlen(buffer);
-    if (whatever_size < len)
-        len = whatever_size;
+    if (available_bytes < len)
+    {
+        len = available_bytes;
+    }
 
-    if (copy_to_user(whatever_char, buffer, len)) {
+    if (copy_to_user(read_buffer, read_buffer, len))
+    {
         return -EFAULT;
     }
 
     *offset += len;
+
     return len;
 };
 
-struct proc_dir_entry *proc_entry;
 
 static const struct proc_ops proc_ops = {
     .proc_read = sysinfo_proc_read,
@@ -91,6 +113,13 @@ void __exit char_device_proc_exit(void)
     pr_info("/proc/%s removed\n", PROC_FILE_NAME);
 };
 
+int append_to_proc(struct seq_file *m, void *v)
+{
+    seq_printf(m, "initial content\n");
+    seq_printf(m, "more data\n");
+    return 0;
+};
+
 /**
  * @brief function to run when proc file is opened.
  * 
@@ -99,7 +128,9 @@ void __exit char_device_proc_exit(void)
  * 
  * @return status code
  */
-int my_proc_open(struct inode *inode, struct file *file)
+int
+my_proc_open(struct inode *inode,
+             struct file *file)
 {
     return single_open(file, append_to_proc, NULL);
 }

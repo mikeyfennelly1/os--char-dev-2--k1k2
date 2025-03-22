@@ -33,6 +33,14 @@ check_and_move_file() {
         return 1
     fi
 
+    # Check if the extension is .o or .ko
+    if [ "$extension" = "o" ] || [ "$extension" = "ko" ]; then
+        echo "The file has an allowed extension: .$extension"
+    else
+        echo "Error: Unsupported file extension '.$extension'"
+        return 1
+    fi
+
     # Move the file to the destination directory
     mv "$file" "$destination_dir/"
     
@@ -67,4 +75,4 @@ process_directory() {
 }
 
 # Example usage: First argument is the source directory, second is the destination directory
-process_directory "$1" "$2"
+process_directory ./ ../build

@@ -39,7 +39,8 @@ static struct cdev sysinfo_cdev;                // character device struct
 static struct class *sysinfo_dev_class;         //
 static ktime_t start_time;                      // record start time in this var
 static int times_read = 0;                      // counter for the amount of times read() called on this device
-static bool device_open false;                  // true if user space application has opened device and not closed yet, else false
+static DEFINE_MUTEX(times_read_mutex);          // mutex to ensure mutual exclusion on times_read increments
+static bool device_open = false;                  // true if user space application has opened device and not closed yet, else false
 static DEFINE_MUTEX(device_mutex);              // mutex to ensure mutual exclusion over processes that can open device
 
 // function prototypes
@@ -53,19 +54,23 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
  * @brief function to run when device is opened.
  * 
  * @param inode - pointer to the inode for this device.
+ * @param fp - pointer to a file structure representing the dev node for this device.
  * 
  * @return integer status code - 0 on success, non-zero value 
- *         relevant to error otherwise
+ *         relevant to error otherwise.
  */
-static int sysinfo_open(struct inode *inode, struct file *fp)
+static
+int
+sysinfo_open(struct inode *inode,
+             struct file *fp)
 {
     mutex_lock(&device_mutex);
 
     if (device_open)
     {
         // unlock the device_mutex if the device has not been reset to closed
-        mutex_unlock(&device_mutex); 
-        printk(KERN_WARNING "sysinfo: device already in use\n");
+        mutex_unlock(&device_mutex);
+        pr_err("sysinfo: device already in use\n");
         return -EBUSY; // return device busy error
     }
 
@@ -85,7 +90,10 @@ static int sysinfo_open(struct inode *inode, struct file *fp)
  * @return integer status code - 0 on success, non-zero value 
  *         relevant to error otherwise.
  */
-static int sysinfo_release(struct inode *inode, struct file *filep)
+static 
+int
+sysinfo_release(struct inode *inode,
+                struct file *filep)
 {
     printk(KERN_INFO "release\n");
     return 0;
@@ -101,9 +109,15 @@ static int sysinfo_release(struct inode *inode, struct file *filep)
  * 
  * @return the amount of bytes read by this device read.
  */
-ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, loff_t *f_pos)
+ssize_t
+sysinfo_read(struct file *filp,
+             char __user *user_buffer,
+             size_t count,
+             loff_t *f_pos)
 {
+    mutex_lock(&times_read_mutex);
     times_read++; // increment the times_read counter
+    mutex_unlock(&times_read_mutex);
 
     // declare the number of bytes to copy to userspace
     // and a counter (bytes_copied).
@@ -125,14 +139,19 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
         pr_err("current_job_data pointer is null\n");
         return -EFAULT;
     }
-    if (strlen(current_job_data) <= 0)
+
+    int message_len = strlen(current_job_data);
+    if (message_len <= 0)
     {
         pr_err("sysinfo device retrieved no data\n");
         return -EAGAIN;
     }
 
     if (*f_pos >= message_len)
-        return 0;
+    {
+        pr_err("File position pointer exceeds message length\n");
+        return -EAGAIN;
+    }
 
     bytes_to_copy = min(count, (size_t)(message_len - *f_pos));
 
@@ -154,7 +173,8 @@ ssize_t sysinfo_read(struct file *filp, char __user *user_buffer, size_t count, 
  * 
  * @return number of times the device has been read.
  */
-int get_times_read(void) 
+int
+get_times_read(void) 
 {
     return times_read;
 }
@@ -164,7 +184,8 @@ int get_times_read(void)
  * 
  * @return number of nanoseconds since device loading
  */
-int get_time_since_loading_ns(void)
+int
+get_time_since_loading_ns(void)
 {
     // get the time after this function is called
     ktime_t current_time = ktime_get();
@@ -183,7 +204,11 @@ int get_time_since_loading_ns(void)
  * @return long status code - 0 on success, non-zero value 
  *         relevant to error otherwise.
  */
-static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+static
+long
+sysinfo_ioctl(struct file *file,
+              unsigned int cmd,
+              unsigned long arg)
 {
     switch (cmd)
     {
@@ -218,7 +243,7 @@ static long sysinfo_ioctl(struct file *file, unsigned int cmd, unsigned long arg
     return 0;
 };
 
-/* file operations available on the file */
+// file_operations structure links system calls to driver to define the syscalls it supports
 static struct file_operations fops = {
     .owner = THIS_MODULE,
     .open = sysinfo_open,
@@ -258,7 +283,7 @@ int __init sysinfo_cdev_init(void)
     err_ret = cdev_add(&sysinfo_cdev, dev_num, 1);
     if (err_ret < 0)
     {
-        pr_err("Failed to add cdev %s\n", err_ret);
+        pr_err("Failed to add cdev %s\n", DEVICE_NAME);
 
         // unregister the character device
         unregister_chrdev_region(dev_num, 1);

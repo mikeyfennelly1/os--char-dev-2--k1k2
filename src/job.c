@@ -30,7 +30,8 @@ Step* step_init(key_value_pair (*get_kvp)(void));
 /**
  * Initialize a DynamicJobBuffer.
  */
-DynamicJobBuffer* init_job_buffer(void)
+DynamicJobBuffer*
+init_job_buffer(void)
 {
     DynamicJobBuffer *b = kmalloc(sizeof(DynamicJobBuffer), GFP_KERNEL);
     b->capacity = INITIAL_CAPACITY;
@@ -45,7 +46,9 @@ DynamicJobBuffer* init_job_buffer(void)
     return b;
 }
 
-void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
+void
+resize_job_buffer(DynamicJobBuffer *b,
+                  size_t new_capacity)
 {
     char *new_data = krealloc(b->data, new_capacity, GFP_KERNEL);
     if (!new_data)
@@ -57,7 +60,9 @@ void resize_job_buffer(DynamicJobBuffer *b, size_t new_capacity)
     b->capacity = new_capacity;
 }
 
-void append_to_job_buffer(DynamicJobBuffer *b, const char* text)
+void
+append_to_job_buffer(DynamicJobBuffer *b,
+                     const char* text)
 {
     size_t text_len = strlen(text);
 
@@ -112,7 +117,8 @@ Step* step_init(key_value_pair (*get_kvp)(void))
  * @return a pointer to the initialized Job,
  *         NULL if job_init failed
  */
-Job* job_init(char* title, key_value_pair (*head_func)(void))
+Job* job_init(char* title,
+              key_value_pair (*head_func)(void))
 {
     // kmalloc new Job.
     Job* job = (Job*)kmalloc(sizeof(Job), GFP_KERNEL);
@@ -141,7 +147,8 @@ Job* job_init(char* title, key_value_pair (*head_func)(void))
  * @param job - the job to add the function pointer to.
  * @param get_kvp_func - the function for the step to add
  */
-void append_step_to_job(Job* job, key_value_pair (*get_kvp_func)(void))
+void append_step_to_job(Job* job,
+                        key_value_pair (*get_kvp_func)(void))
 {
     // initialize cur as job.head
     Step* cur = job->head;
@@ -229,7 +236,8 @@ char* run_job(Job* j)
  * 
  * @return pointer to the job for current_info_type.
  */
-Job* get_current_job(void)
+Job*
+get_current_job(void)
 {
     Job* current_job;
     
@@ -260,7 +268,8 @@ Job* get_current_job(void)
  * 
  * @return 0 if success, -1 on error.
  */
-int set_current_info_type(int value)
+int
+set_current_info_type(int value)
 {
     printk("Attempting to set ioctl val to: %d\n", value);
     if (value <=3 && value >=1)
@@ -271,7 +280,7 @@ int set_current_info_type(int value)
     }
     else
     {
-        return -1;
+        return -EFAULT;
     }
 }
 
