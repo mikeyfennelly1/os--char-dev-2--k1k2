@@ -30,7 +30,7 @@ Clone this repo.
 
 [source, bash]
 ----
-git clone git@github.com:mikeyfennelly1/os--char-dev-2--k1k2.git
+git clone git@github.com:mikeyfennelly1/os--char-dev--lkm.git
 ----
 
 Install dependencies.
