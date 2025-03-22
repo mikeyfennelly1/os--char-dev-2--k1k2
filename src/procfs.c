@@ -1,3 +1,11 @@
+/**
+ * procfs.c
+ * 
+ * Functions for the /proc filesystem for this device.
+ * 
+ * @author Mikey Fennelly
+ */
+
 #include <linux/proc_fs.h>
 #include <linux/module.h>
 #include <linux/seq_file.h>
@@ -8,18 +16,23 @@
 
 #define PROC_FILE_NAME "sysinfo"
 
-ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset);
+ssize_t sysinfo_proc_read(struct file *file, char *read_buffer, size_t whatever_size,  loff_t *offset);
 int append_to_proc(struct seq_file *m, void *v);
 int my_proc_open(struct inode *inode, struct file *file);
 int __init char_device_proc_init(void);
 void __exit char_device_proc_exit(void);
 
 /**
- * Function called when userspace file reads /proc/sysinfo
+ * @brief called when userspace file reads /proc/sysinfo
  * 
- * @return 
+ * @param file - pointer to /proc file struct in kernel space
+ * @param read_buffer - buffer which the function data will be copied
+ * @param available_bytes - number of bytes the reader is allowed to read
+ * @param offset - offset for start of read within the file
+ * 
+ * @return size of the read in bytes
  */
-ssize_t sysinfo_proc_read(struct file *file, char *whatever_char, size_t whatever_size,  loff_t *offset)
+ssize_t sysinfo_proc_read(struct file *file, char *read_buffer, size_t available_bytes,  loff_t *offset)
 {
     char buffer[256];
 
@@ -48,9 +61,12 @@ static const struct proc_ops proc_ops = {
 };
 
 /**
- * Function to run on initialization of proc file
+ * @brief function to initialize /proc file
  * 
- * @return -1 if error, else 0
+ * Creates a proc entry in kernel space. Sets permissions 
+ * and operations on that file.
+ * 
+ * @return int status code
  */
 int __init char_device_proc_init(void)
 {
@@ -66,8 +82,7 @@ int __init char_device_proc_init(void)
 };
 
 /**
- * Function to run on exit of end of life for /proc/sysinfo.
- * i.e. when module is removed.
+ * @brief function to remove /proc file
  */
 void __exit char_device_proc_exit(void)
 {
@@ -76,14 +91,14 @@ void __exit char_device_proc_exit(void)
     pr_info("/proc/%s removed\n", PROC_FILE_NAME);
 };
 
-
-int append_to_proc(struct seq_file *m, void *v)
-{
-    seq_printf(m, "initial content\n");
-    seq_printf(m, "more data\n");
-    return 0;
-};
-
+/**
+ * @brief function to run when proc file is opened.
+ * 
+ * @param inode - pointer to proc file inode.
+ * @param file - function to call on open of proc file.
+ * 
+ * @return status code
+ */
 int my_proc_open(struct inode *inode, struct file *file)
 {
     return single_open(file, append_to_proc, NULL);

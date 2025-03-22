@@ -1,3 +1,11 @@
+/**
+ * memory.c
+ * 
+ * Configures and gets memory job.
+ * 
+ * @author Danny Quinn
+ */
+
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/mm.h>

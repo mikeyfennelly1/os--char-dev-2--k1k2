@@ -1,3 +1,11 @@
+/**
+ * cpu.c
+ * 
+ * Configures and gets cpu job.
+ * 
+ * @author Sarah McDonagh
+ */
+
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/sched.h>

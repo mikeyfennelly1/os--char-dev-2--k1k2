@@ -1,3 +1,11 @@
+/**
+ * disk.c
+ * 
+ * Create job, and getter for disk job.
+ * 
+ * @author Mikey Fennelly
+ */
+
 #include <asm/cpu.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
