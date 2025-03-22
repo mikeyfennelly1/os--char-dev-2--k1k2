@@ -99,5 +99,3 @@ Job* get_my_job(void)
     return my_job;
 }
 ----
-
-And that is it, that is all you have to do to create a Job.
