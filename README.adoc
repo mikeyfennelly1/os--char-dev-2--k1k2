@@ -59,7 +59,7 @@ When you run make, there will be a new directory _./build_, and a subdirectory _
 
 [source, bash]
 ----
-sudo insmod ./build/k_objs/sysinfo.ko
+sudo insmod ./build/sysinfo.ko
 ----
 
 === Verify module load
