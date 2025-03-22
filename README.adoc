@@ -1,7 +1,7 @@
 = os--char-dev--lkm
 :toc:
 
-_*O*perating *S*ystems, *Char*acter *Dev*ice, *L*oadable *K*ernel *M*odule_
+_*O*perating *S*ystems, *Char*acter *Dev*ice, *L*oadable *K*ernel **M**odule_
 
 This is a character device gets system information from kernel space, and returns it as a byte stream of JSON.
 
